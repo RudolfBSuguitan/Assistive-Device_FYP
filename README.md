@@ -11,3 +11,6 @@ Developing a device that could potentially guide and assist people who are visua
 -sounds were downloaded from the internet
 -sound will be updated to make it more modern by using human voices?
 -detection will also be calibrated to check moving objects to avoid the unnecessary warnings.
+-got the 2 sensors working side by side however, like it thought i would be, is a bit delayed.
+-this is due to the style of coding which is FCFS. will try and address this issues usin functions
+-Though i can create 2 separate programs that will run at the same time but data handling will be an issue
