@@ -12,6 +12,12 @@ TRIGRIGHT = 25                                  #Associate pin 23 to TRIG
 ECHORIGHT = 8
 
 
+pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/welcome.wav")
+pygame.mixer.music.play()
+time.sleep(5)
+pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-07.mp3")
+pygame.mixer.music.play()
+
 print "Distance measurement in progress"
 
 GPIO.setup(TRIGLEFT,GPIO.OUT)                  #Set pin as GPIO out
@@ -23,11 +29,11 @@ GPIO.setup(ECHORIGHT,GPIO.IN)                   #Set pin as GPIO in
 while True:
 	GPIO.output(TRIGLEFT, False)
   	print "Waitng For SensorS"
-  	time.sleep(1)                            #Delay of 2 seconds
+  	time.sleep(0.05)                            #Delay of 2 seconds
 
 
   	GPIO.output(TRIGLEFT, True)
-  	time.sleep(0.001)                      #Delay of 0.00001 seconds
+  	time.sleep(0.00001)                      #Delay of 0.00001 seconds
   	GPIO.output(TRIGLEFT, False)
 
   	while GPIO.input(ECHOLEFT)==0:               #Check whether the ECHO is LOW
@@ -45,20 +51,20 @@ while True:
 
   	if distance > 50:      #Check whether the distance is within range
     		print "Distance Left:",distance - 0.5,"cm"  #Print distance with 0.5 cm calibration
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-07.mp3")
-		pygame.mixer.music.play()
   	else:
     		print "Out Of Range "                   #display out of range
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-01a.mp3")
+		time.sleep(1)
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
                 pygame.mixer.music.play()
+		time.sleep(2)
 
 
 	GPIO.output(TRIGRIGHT, False)
         print "Waitng For SensorS"
-        time.sleep(1)                            #Delay of 2 seconds
+        time.sleep(0.05)                            #Delay of 2 seconds
 
         GPIO.output(TRIGRIGHT, True)
-        time.sleep(0.001)                      #Delay of 0.00001 seconds
+        time.sleep(0.00001)                      #Delay of 0.00001 seconds
         GPIO.output(TRIGRIGHT, False)
 
         while GPIO.input(ECHORIGHT)==0:               #Check whether the ECHO is LOW
@@ -75,11 +81,11 @@ while True:
 
         if distance > 80:      #Check whether the distance is within range
                 print "Distance RIGHT:",distance - 0.5,"cm"  #Print distance with 0.5 cm calibration
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-07.mp3")
-                pygame.mixer.music.play()
         else:
                 print "Out Of Range RIGHT "                   #display out of range
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-01a.mp3")
+		time.sleep(1)
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectRight.wav")
                 pygame.mixer.music.play()
+		time.sleep(2)
 
 
