@@ -14,3 +14,7 @@ Developing a device that could potentially guide and assist people who are visua
 -got the 2 sensors working side by side however, like it thought i would be, is a bit delayed.
 -this is due to the style of coding which is FCFS. will try and address this issues usin functions
 -Though i can create 2 separate programs that will run at the same time but data handling will be an issue
+-using rc.local in /etc to run script on boot
+-working with warning massages - messages has to be shorter but as effective to allow user react on time
+-will make it smarter using functions
+-better input handling
