@@ -23,6 +23,7 @@ while True:
         time.sleep(0.05)
 
         GPIO.output(TRIGFRONT, True)
+	#Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10μS duration.
         time.sleep(0.00001)                      #Delay of 0.00001 seconds
         GPIO.output(TRIGFRONT, False)
 
