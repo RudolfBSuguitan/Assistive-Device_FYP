@@ -8,18 +8,18 @@ GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering
 TRIGFRONT = 25
 ECHOFRONT = 8
 
-pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/welcome.wav")
-pygame.mixer.music.play()
-time.sleep(5)
-pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-07.mp3")
-pygame.mixer.music.play()
+#pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/welcome.wav")
+#pygame.mixer.music.play()
+#time.sleep(5)
+#pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-07.mp3")
+#pygame.mixer.music.play()
 
 while True:
         GPIO.setup(TRIGFRONT,GPIO.OUT)
         GPIO.setup(ECHOFRONT,GPIO.IN)
 	
 	GPIO.output(TRIGFRONT, False)
-	print "Front"
+	#print "Front"
         time.sleep(0.05)
 
         GPIO.output(TRIGFRONT, True)
@@ -43,7 +43,7 @@ while True:
         else:
 
                 print "Front out", distance                   #display out of range
-                pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/frontObject.wav")
+                pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/beep-07.mp3")
                 pygame.mixer.music.play()
-                time.sleep(2)
+                #time.sleep(2)
 
