@@ -8,7 +8,7 @@ GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering
 def usensor(trig, echo):
         GPIO.output(trig, False)
         #print "Front"
-        time.sleep(0.05)
+        #time.sleep(0.05)
 
         GPIO.output(trig, True)
         time.sleep(0.00001)                      #Delay of 0.00001 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
@@ -28,6 +28,29 @@ def usensor(trig, echo):
         return distance
 
 
+def warningFront():
+	pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
+	pygame.mixer.music.play()
+	time.sleep(1.8)
+	return
+
+def curPos(warn_dist):
+
+	warningFront()
+
+	distance = usensor(TRIGFRONT, ECHOFRONT)
+	dist_up = warn_dist+5
+	dist_down = warn_dist-5
+
+	while True:
+		if dist_up >= distance and dist_down <= distance:
+			time.sleep(0.2)
+			distance = usensor(TRIGFRONT, ECHOFRONT)
+			print "Stationary", distance
+		else:
+			break
+	
+
 TRIGFRONT = 25
 ECHOFRONT = 8
 
@@ -37,15 +60,20 @@ while True:
 
 	distance = usensor(TRIGFRONT, ECHOFRONT)
 	
-        if distance > 80:      #Check whether the distance is within range
+        if distance > 100:      #Check whether the distance is within range
                 print "Distance Front:",distance - 0.5,"cm"  #Print distance with 0.5 cm calibration
-        if distance < 80:
+        if distance < 100:
 		print "Distance Front:",distance - 0.5,"cm"  #Print distance with 0.5 cm calibration
 		time.sleep(0.5)
 		distance = usensor(TRIGFRONT, ECHOFRONT)
-		if distance < 80:
+		if distance < 100:
                 	print "WARNING", distance                   #display out of range
-                	pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
-                	pygame.mixer.music.play()
-                	time.sleep(2)
+               		#warningFront()
 
+			warn_dist = distance
+
+			curPos(warn_dist)
+			#distance = usensor(TRIGFRONT, ECHOFRONT)
+
+			#if 
+			
