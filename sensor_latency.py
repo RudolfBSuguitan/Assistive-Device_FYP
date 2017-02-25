@@ -26,29 +26,6 @@ def usensor(trig, echo):
         return distance
 
 
-def warningFront():
-        pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
-        pygame.mixer.music.play()
-	time.sleep(1.8)
-        return
-
-def curPos(warn_dist):
-
-        warningFront()
-
-        distance = usensor(TRIGFRONT, ECHOFRONT)
-        dist_up = warn_dist+5
-        dist_down = warn_dist-5
-
-        while True:
-                if dist_up >= distance and dist_down <= distance:
-                        time.sleep(0.2)
-                        distance = usensor(TRIGFRONT, ECHOFRONT)
-                        print "Stationary Decrease: ", distance 
-                else:
-                        break
-
-
 TRIGFRONT = 25
 ECHOFRONT = 8
 
@@ -60,14 +37,13 @@ while True:
 
         if distance > 100:
                 print "Distance Front:",distance - 0.5,"cm"
+		s_time = time.time()
         if distance < 100:
                 print "Checking Distance:",distance - 0.5,"cm"
-		time.sleep(0.5)
-                distance = usensor(TRIGFRONT, ECHOFRONT)
-                if distance < 100:
-                        print "WARNING", distance
-                        warn_dist = distance
+		e_time = time.time()
 
-                        curPos(warn_dist)
+		latency = e_time - s_time
+		print "Latency: ", latency
+		break
 
 
