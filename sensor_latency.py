@@ -26,27 +26,45 @@ def usensor(trig, echo):
         return distance
 
 
-TRIGFRONT = 25
-ECHOFRONT = 8
+TRIGFRONT=25
+ECHOFRONT=8
+Test_Distance=100
+num_test=0
+total_time=0
 
 while True:
         GPIO.setup(TRIGFRONT,GPIO.OUT)
         GPIO.setup(ECHOFRONT,GPIO.IN)
 
-        distance = usensor(TRIGFRONT, ECHOFRONT)
-	ws_time = time.time()
-	w_time = time.time() - ws_time
-	print "While time: ", w_time
-	break
+	s_time = time.time()        
 
-        #if distance > 100:
-		#s_time = time.time()
-        #if distance < 100:
-                #print "Checking Distance:",distance - 0.5,"cm"
-		#e_time = time.time()
+	distance = usensor(TRIGFRONT, ECHOFRONT)
+	
+        if distance <= Test_Distance:
+		e_time = time.time()
 
-		#latency = e_time - s_time
-		#print "Latency: ", latency
-		#break
+		latency = e_time - s_time
+		num_test+=1
+		print "Test No: ", num_test
+		print "Distance: ", distance
+		print "Latency: ", latency
 
+		total_time += latency
 
+	if num_test == 10:
+		avg_latency_sec = total_time/num_test
+		avg_latency_mil = avg_latency_sec*1000
+		avg_latency_mic = avg_latency_sec*1000000
+		
+		print "Distance: =<", Test_Distance 
+		print "Second -> Average Latency: ", avg_latency_sec
+		print "Milliseconds -> Average Latency: ", avg_latency_mil
+		print "Microseconds -> Average Latency: ", avg_latency_mic
+
+		break
+
+	print "Wait.."
+	time.sleep(3)
+	print "Ready!"
+
+GPIO.cleanup()
