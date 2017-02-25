@@ -35,7 +35,7 @@ while True:
 
         distance = usensor(TRIGFRONT, ECHOFRONT)
 	ws_time = time.time()
-	w_time = tim.time() - ws_time
+	w_time = time.time() - ws_time
 	print "While time: ", w_time
 	break
 
