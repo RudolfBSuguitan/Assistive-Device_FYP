@@ -34,16 +34,19 @@ while True:
         GPIO.setup(ECHOFRONT,GPIO.IN)
 
         distance = usensor(TRIGFRONT, ECHOFRONT)
+	ws_time = time.time()
+	w_time = tim.time() - ws_time
+	print "While time: ", w_time
+	break
 
-        if distance > 100:
-                print "Distance Front:",distance - 0.5,"cm"
-		s_time = time.time()
-        if distance < 100:
-                print "Checking Distance:",distance - 0.5,"cm"
-		e_time = time.time()
+        #if distance > 100:
+		#s_time = time.time()
+        #if distance < 100:
+                #print "Checking Distance:",distance - 0.5,"cm"
+		#e_time = time.time()
 
-		latency = e_time - s_time
-		print "Latency: ", latency
-		break
+		#latency = e_time - s_time
+		#print "Latency: ", latency
+		#break
 
 
