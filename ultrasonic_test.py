@@ -1,9 +1,29 @@
+#measure the latency to show how fast it cen provide warnings to users
+#corraborating the 3 senors to make sure they are all working together without losing performance
+#measure power consumption and check if it can be more efficient without losing performance
+from subprocess import call
+
 import pygame
 pygame.mixer.init()
 
 import RPi.GPIO as GPIO                    #Import GPIO library
 import time                                #Import time library
 GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering 
+
+def call_reboot(trigfront, echofront):
+	call_shut = 0
+	while True:
+		time.sleep(0.5)
+		distance = usensor(trigfront, echofront)
+		if distance <= 5:
+			call_shut+=1
+			if call_shut == 10:
+				break
+		if distance > 5:
+			print "Cancelling Reboot"
+			break
+	return call_shut
+	
 
 def usensor(trig, echo):
         GPIO.output(trig, False)
@@ -20,7 +40,7 @@ def usensor(trig, echo):
         while GPIO.input(echo)==1:               #Check whether the ECHO is HIGH
                 pulse_end = time.time()                #Saves the last known time of HIGH pulse
 
-        pulse_duration = pulse_end - pulse_start #Get pulse duration to a variable
+        pulse_duration = pulse_end - pulse_start
 
         distance = pulse_duration * 17150        #Multiply pulse duration by 17150 to get distance
         distance = round(distance, 2)            #Round to two decimal points
@@ -36,7 +56,7 @@ def warningFront():
 
 def curPos(warn_dist):
 
-	warningFront()
+	#warningFront()
 
 	distance = usensor(TRIGFRONT, ECHOFRONT)
 	dist_up = warn_dist+5
@@ -46,7 +66,7 @@ def curPos(warn_dist):
 		if dist_up >= distance and dist_down <= distance:
 			time.sleep(0.2)
 			distance = usensor(TRIGFRONT, ECHOFRONT)
-			print "Stationary", distance
+			print "Stationary Decrease: ", distance
 		else:
 			break
 	
@@ -54,26 +74,45 @@ def curPos(warn_dist):
 TRIGFRONT = 25
 ECHOFRONT = 8
 
-while True:
-        GPIO.setup(TRIGFRONT,GPIO.OUT)
-        GPIO.setup(ECHOFRONT,GPIO.IN)
+#TRIGLEFT
+#ECHOLEFT
 
+#TRIGRIGHT
+#ECHORIGHT
+
+GPIO.setup(TRIGFRONT,GPIO.OUT)
+GPIO.setup(ECHOFRONT,GPIO.IN)
+
+
+num_shut=0
+while True:
 	distance = usensor(TRIGFRONT, ECHOFRONT)
 	
-        if distance > 100:      #Check whether the distance is within range
-                print "Distance Front:",distance - 0.5,"cm"  #Print distance with 0.5 cm calibration
-        if distance < 100:
-		print "Distance Front:",distance - 0.5,"cm"  #Print distance with 0.5 cm calibration
+        if distance > 100:
+                 print "Distance Front:",distance,"cm" 
+        if distance <= 100 and distance > 5:
+		print "Checking Distance:",distance, "cm"  
 		time.sleep(0.5)
+
 		distance = usensor(TRIGFRONT, ECHOFRONT)
-		if distance < 100:
-                	print "WARNING", distance                   #display out of range
-               		#warningFront()
+
+		if distance <= 100 and not distance <= 5:
+                	print "WARNING", distance
+               		warningFront()
 
 			warn_dist = distance
-
 			curPos(warn_dist)
-			#distance = usensor(TRIGFRONT, ECHOFRONT)
+	
+	if distance <= 5:
+		print "Preparing to shutdown"
+		time.sleep(5)
+		num_shut=call_reboot(TRIGFRONT, ECHOFRONT)
+		if num_shut == 10:
+			print"Success"
+			break
+		#time.sleep(5)
+		
 
-			#if 
-			
+call('reboot')
+
+
