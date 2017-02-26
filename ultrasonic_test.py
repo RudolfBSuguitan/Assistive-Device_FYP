@@ -1,6 +1,7 @@
-#measure the latency to show how fast it cen provide warnings to users
 #corraborating the 3 senors to make sure they are all working together without losing performance
 #measure power consumption and check if it can be more efficient without losing performance
+#measure accuracy of sensors
+#perform test
 from subprocess import call
 
 import pygame
@@ -42,7 +43,7 @@ def Setup():
 def call_reboot(trig, echo):
 	call_shut = 0
 	while True:
-		time.sleep(0.5)
+		time.sleep(0.2)
 		distance = usensor(trig, echo)
 		print "Distance from Reboot Function", distance
 		if distance <= 5 and distance > 2:
@@ -52,7 +53,7 @@ def call_reboot(trig, echo):
 				break
 		if distance > 5:
 			print "Cancelling Reboot"
-			time.sleep(3)
+			time.sleep(1.8)
 			break
 	return call_shut
 	
@@ -60,6 +61,7 @@ def call_reboot(trig, echo):
 def usensor(trig, echo):
 	pulse_start=0
 	pulse_end=0
+
         GPIO.output(trig, False)
 
         GPIO.output(trig, True)
@@ -75,7 +77,7 @@ def usensor(trig, echo):
         pulse_duration = pulse_end - pulse_start
 
         distance = pulse_duration * 17150        #Multiply pulse duration by 17150 to get distance
-        distance = round(distance, 2)            #Round to two decimal points
+        distance = round(distance, 2)
 
         return distance
 
@@ -89,62 +91,88 @@ def warningMessage(sensor):
 		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
 	pygame.mixer.music.play()
 	time.sleep(1.8)
+
 	return
 
 def curPos(warn_dist, trig, echo):
-
-	#warningFront()
-
 	distance = usensor(trig, echo)
 	dist_up = warn_dist+10
 	dist_down = warn_dist-10
 
+	warning=0
+
 	while True:
+		time.sleep(0.2)
+		distance = usensor(trig, echo)
 		if dist_up >= distance and dist_down <= distance:
+			print "Stationary Distance: ", distance
+		elif distance > dist_up:
 			time.sleep(0.2)
 			distance = usensor(trig, echo)
-			print "Stationary Distance: ", distance
-		elif distance > dist_up or dist_down > distance:
-			break
-	return
+			if distance > dist_up:
+				warning=0
+				break
+		elif dist_down > distance:
+			time.sleep(0.2)
+                        distance = usensor(trig, echo)
+			if dist_down > distance:
+				warning=1
+				break
+	return warning
 
 num_shut=0
+detection_range=100
 
+#MAIN
 Setup()
-
 while True:
-	#break
 	for i in range(1):
-		#print "Sensor: ", pin[i].sensor, " Trigger: ", pin[i].trig, " Echo: ", pin[i].echo
-		#time.sleep(2)
 		distance = usensor(pin[i].trig, pin[i].echo)
 	
-        	if distance > 50: #and not distance > 400:
-			print "Distance :",pin[i].sensor, distance,"cm" 
-        	elif distance <= 50 and distance > 30 :
-			print "Checking Distance:",distance, "cm"  
-			time.sleep(0.5)
-
+        	if distance > detection_range:
+			print "Distance: ",pin[i].sensor, distance,"cm"
+ 
+        	elif distance <= detection_range and distance > 30 :
+			print "Checking Distance:", distance, "cm"  
+			#time.sleep(0.2)
+			temp_distance = distance
 			distance = usensor(pin[i].trig, pin[i].echo)
+			
+			if distance > temp_distance:
+				break
 
-			if distance <= 50 and distance > 30:
-                		print "WARNING", distance
-               			warningMessage(pin[i].sensor)
+			elif distance <= detection_range and distance > 20:
+				warning = curPos(distance, pin[i].trig, pin[i].echo) 
+				if warning == 1:
+					print "WARNING", distance
+                                	warningMessage(pin[i].sensor)
+				elif warning == 0:
+			 		print "Object Moving Forward"
+				
+			
+			#time.sleep(0.2)
+			#distance = usensor(pin[i].trig, pin[i].echo)
 
-				warn_dist = distance
-				curPos(warn_dist, pin[i].trig, pin[i].echo)
-		elif distance <= 30 and distance > 5:
+			#if distance <= detection_range and distance > 30:
+                		#print "WARNING", distance
+               			#warningMessage(pin[i].sensor)
+
+				#curPos(distance, pin[i].trig, pin[i].echo)
+
+		elif distance <= 20 and distance > 5:
 			print "Area of No Detection: ", distance
 	
 		elif distance <= 5 and distance > 2:
 			print "Preparing to Reboot. Distance is: ", distance
-			time.sleep(3)
+			time.sleep(1.8)
 			num_shut=call_reboot(pin[i].trig, pin[i].echo)
 			if num_shut == 10:
 				print"Success"
 				break
-		elif distance < 2 and distance > 400:
-			print "Out of bounce distance: ", distance
+
+		#elif distance < 2 and distance > 400:
+			#print "Out of bounce distance: ", distance
+
 	if num_shut == 10:
 		break
 		
