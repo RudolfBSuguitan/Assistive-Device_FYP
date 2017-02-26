@@ -16,6 +16,7 @@ GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering
 ReferenceTrig = [25, 16, 23]
 ReferenceEcho = [8, 20, 24]
 ReferenceSensor = ["Front", "Right", "Left"]
+num_shut=0
 
 class Pin:
         def __init__(self):
@@ -43,7 +44,7 @@ def Setup():
 def call_reboot(trig, echo):
 	call_shut = 0
 	while True:
-		time.sleep(0.2)
+		time.sleep(0.5)
 		distance = usensor(trig, echo)
 		print "Distance from Reboot Function", distance
 		if distance <= 5 and distance > 2:
@@ -100,27 +101,34 @@ def curPos(warn_dist, trig, echo):
 	dist_down = warn_dist-10
 
 	warning=0
+	num_shut=0
 
 	while True:
 		time.sleep(0.2)
 		distance = usensor(trig, echo)
 		if dist_up >= distance and dist_down <= distance:
 			print "Stationary Distance: ", distance
-		elif distance > dist_up:
+		elif distance > dist_up and distance > 10:
 			time.sleep(0.2)
 			distance = usensor(trig, echo)
 			if distance > dist_up:
 				warning=0
 				break
-		elif dist_down > distance:
+		elif dist_down > distance and distance > 10:
 			time.sleep(0.2)
                         distance = usensor(trig, echo)
 			if dist_down > distance:
 				warning=1
 				break
+		elif distance <= 10 and distance > 2:
+			time.sleep(0.5)
+                        distance = usensor(pin[i].trig, pin[i].echo)
+                        if distance <= 5 and distance > 2:
+                                print "SSSPreparing to Reboot. Distance is: ", distance
+                                warning=2
+				break
 	return warning
 
-num_shut=0
 detection_range=100
 
 #MAIN
@@ -134,40 +142,42 @@ while True:
  
         	elif distance <= detection_range and distance > 30 :
 			print "Checking Distance:", distance, "cm"  
-			#time.sleep(0.2)
 			temp_distance = distance
 			distance = usensor(pin[i].trig, pin[i].echo)
 			
 			if distance > temp_distance:
+				print "Bad Reading", distance
+				time.sleep(1)
 				break
 
 			elif distance <= detection_range and distance > 20:
 				warning = curPos(distance, pin[i].trig, pin[i].echo) 
 				if warning == 1:
-					print "WARNING", distance
+					print "WARNING", usensor(pin[i].trig, pin[i].echo)
                                 	warningMessage(pin[i].sensor)
 				elif warning == 0:
 			 		print "Object Moving Forward"
+				elif warning == 2:
+					print "Rebooting"
+					break
 				
-			
-			#time.sleep(0.2)
-			#distance = usensor(pin[i].trig, pin[i].echo)
-
-			#if distance <= detection_range and distance > 30:
-                		#print "WARNING", distance
-               			#warningMessage(pin[i].sensor)
-
-				#curPos(distance, pin[i].trig, pin[i].echo)
-
-		elif distance <= 20 and distance > 5:
+		elif distance <= 20 and distance > 10:
 			print "Area of No Detection: ", distance
 	
-		elif distance <= 5 and distance > 2:
-			print "Preparing to Reboot. Distance is: ", distance
-			time.sleep(1.8)
-			num_shut=call_reboot(pin[i].trig, pin[i].echo)
-			if num_shut == 10:
-				print"Success"
+		elif distance <= 10 and distance > 2:
+			time.sleep(0.5)
+			distance = usensor(pin[i].trig, pin[i].echo)
+			if distance <= 5 and distance > 2:
+				print "Preparing to Reboot. Distance is: ", distance
+				time.sleep(1.8)
+				num_shut=call_reboot(pin[i].trig, pin[i].echo)
+			
+				if num_shut == 10:
+					print"Success"
+					break
+				else:
+					num_shut=0
+			else:
 				break
 
 		#elif distance < 2 and distance > 400:
