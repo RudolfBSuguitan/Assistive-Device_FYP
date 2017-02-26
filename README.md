@@ -18,3 +18,21 @@ Developing a device that could potentially guide and assist people who are visua
 -working with warning massages - messages has to be shorter but as effective to allow user react on time
 -will make it smarter using functions
 -better input handling
+
+
+
+
+-vncserver:1
+
+-Problem with Raspberry Pi Resources. to slow to run the camera
+	-overclocked the pi but still not powerful enough
+	-especially when detecting more images
+	-run on linux laptop?
+-training takes hours to days
+-inaccurate sensors - got around by adding delays but without affecting the user too much
+-test the accuracy of camera and senors
+-calculate latency - particular distances
+-calculate power consumption
+	-ways to reduce consumption
+-installing opencv
+-learning how to process images
