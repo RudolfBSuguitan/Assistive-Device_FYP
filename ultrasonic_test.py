@@ -26,6 +26,8 @@ def call_reboot(trigfront, echofront):
 	
 
 def usensor(trig, echo):
+	pulse_start=0
+	pulse_end=0
         GPIO.output(trig, False)
         #print "Front"
         #time.sleep(0.05)
@@ -35,7 +37,7 @@ def usensor(trig, echo):
         GPIO.output(trig, False)
 
         while GPIO.input(echo)==0:               #Check whether the ECHO is LOW
-                pulse_start = time.time()              #Saves the last known time of LOW pulse
+		pulse_start = time.time()              #Saves the last known time of LOW pulse
 
         while GPIO.input(echo)==1:               #Check whether the ECHO is HIGH
                 pulse_end = time.time()                #Saves the last known time of HIGH pulse
@@ -83,8 +85,8 @@ ECHOFRONT = 8
 GPIO.setup(TRIGFRONT,GPIO.OUT)
 GPIO.setup(ECHOFRONT,GPIO.IN)
 
-
 num_shut=0
+
 while True:
 	distance = usensor(TRIGFRONT, ECHOFRONT)
 	
@@ -112,7 +114,8 @@ while True:
 			break
 		#time.sleep(5)
 		
-
+GPIO.cleanup()
+time.sleep(3)
 call('reboot')
 
 
