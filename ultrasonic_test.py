@@ -8,19 +8,51 @@ pygame.mixer.init()
 
 import RPi.GPIO as GPIO                    #Import GPIO library
 import time                                #Import time library
-GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering 
 
-def call_reboot(trigfront, echofront):
+GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering
+
+
+ReferenceTrig = [25, 16, 23]
+ReferenceEcho = [8, 20, 24]
+ReferenceSensor = ["Front", "Right", "Left"]
+
+class Pin:
+        def __init__(self):
+                self.trig = 0
+                self.echo = 0
+		self.sensor = 0
+#define class instances (3 objects)
+pin= [Pin() for i in range(3)]
+
+
+def Setup():
+	for i in range(1):
+		pin[i].trig = ReferenceTrig[i]  
+		pin[i].echo = ReferenceEcho[i]
+		pin[i].sensor = ReferenceSensor[i]
+
+		GPIO.setup(pin[i].trig,GPIO.OUT)
+		GPIO.setup(pin[i].echo,GPIO.IN)
+
+		print "--Setup--"
+		print "Sensor: ", pin[i].sensor, " Trigger: ", pin[i].trig, " Echo: ", pin[i].echo
+		time.sleep(3) 
+	 
+
+def call_reboot(trig, echo):
 	call_shut = 0
 	while True:
 		time.sleep(0.5)
-		distance = usensor(trigfront, echofront)
-		if distance <= 5:
+		distance = usensor(trig, echo)
+		print "Distance from Reboot Function", distance
+		if distance <= 5 and distance > 2:
 			call_shut+=1
 			if call_shut == 10:
+				print "Starting Reboot"
 				break
 		if distance > 5:
 			print "Cancelling Reboot"
+			time.sleep(3)
 			break
 	return call_shut
 	
@@ -29,8 +61,6 @@ def usensor(trig, echo):
 	pulse_start=0
 	pulse_end=0
         GPIO.output(trig, False)
-        #print "Front"
-        #time.sleep(0.05)
 
         GPIO.output(trig, True)
         time.sleep(0.00001)                      #Delay of 0.00001 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
@@ -50,72 +80,77 @@ def usensor(trig, echo):
         return distance
 
 
-def warningFront():
-	pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
+def warningMessage(sensor):
+	if sensor == "Front":
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
+	elif sensor == "Right":
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
+	elif sensor == "Left":
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
 	pygame.mixer.music.play()
 	time.sleep(1.8)
 	return
 
-def curPos(warn_dist):
+def curPos(warn_dist, trig, echo):
 
 	#warningFront()
 
-	distance = usensor(TRIGFRONT, ECHOFRONT)
-	dist_up = warn_dist+5
-	dist_down = warn_dist-5
+	distance = usensor(trig, echo)
+	dist_up = warn_dist+10
+	dist_down = warn_dist-10
 
 	while True:
 		if dist_up >= distance and dist_down <= distance:
 			time.sleep(0.2)
-			distance = usensor(TRIGFRONT, ECHOFRONT)
-			print "Stationary Decrease: ", distance
-		else:
+			distance = usensor(trig, echo)
+			print "Stationary Distance: ", distance
+		elif distance > dist_up or dist_down > distance:
 			break
-	
-
-TRIGFRONT = 25
-ECHOFRONT = 8
-
-#TRIGLEFT
-#ECHOLEFT
-
-#TRIGRIGHT
-#ECHORIGHT
-
-GPIO.setup(TRIGFRONT,GPIO.OUT)
-GPIO.setup(ECHOFRONT,GPIO.IN)
+	return
 
 num_shut=0
 
+Setup()
+
 while True:
-	distance = usensor(TRIGFRONT, ECHOFRONT)
+	#break
+	for i in range(1):
+		#print "Sensor: ", pin[i].sensor, " Trigger: ", pin[i].trig, " Echo: ", pin[i].echo
+		#time.sleep(2)
+		distance = usensor(pin[i].trig, pin[i].echo)
 	
-        if distance > 100:
-                 print "Distance Front:",distance,"cm" 
-        if distance <= 100 and distance > 5:
-		print "Checking Distance:",distance, "cm"  
-		time.sleep(0.5)
+        	if distance > 50: #and not distance > 400:
+			print "Distance :",pin[i].sensor, distance,"cm" 
+        	elif distance <= 50 and distance > 30 :
+			print "Checking Distance:",distance, "cm"  
+			time.sleep(0.5)
 
-		distance = usensor(TRIGFRONT, ECHOFRONT)
+			distance = usensor(pin[i].trig, pin[i].echo)
 
-		if distance <= 100 and not distance <= 5:
-                	print "WARNING", distance
-               		warningFront()
+			if distance <= 50 and distance > 30:
+                		print "WARNING", distance
+               			warningMessage(pin[i].sensor)
 
-			warn_dist = distance
-			curPos(warn_dist)
+				warn_dist = distance
+				curPos(warn_dist, pin[i].trig, pin[i].echo)
+		elif distance <= 30 and distance > 5:
+			print "Area of No Detection: ", distance
 	
-	if distance <= 5:
-		print "Preparing to shutdown"
-		time.sleep(5)
-		num_shut=call_reboot(TRIGFRONT, ECHOFRONT)
-		if num_shut == 10:
-			print"Success"
-			break
-		#time.sleep(5)
+		elif distance <= 5 and distance > 2:
+			print "Preparing to Reboot. Distance is: ", distance
+			time.sleep(3)
+			num_shut=call_reboot(pin[i].trig, pin[i].echo)
+			if num_shut == 10:
+				print"Success"
+				break
+		elif distance < 2 and distance > 400:
+			print "Out of bounce distance: ", distance
+	if num_shut == 10:
+		break
 		
 GPIO.cleanup()
 time.sleep(3)
-call('reboot')
+print "END"
+#call('reboot')
 
 
