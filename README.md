@@ -36,3 +36,12 @@ Developing a device that could potentially guide and assist people who are visua
 	-ways to reduce consumption
 -installing opencv
 -learning how to process images
+
+
+-using different modes
+	-one for collission
+	-one for object inputs
+
+-use other py to run warnings
+-talk about the buffer including the delay
+-the averages that can be done
