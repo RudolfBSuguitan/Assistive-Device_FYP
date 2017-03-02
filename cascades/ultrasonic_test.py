@@ -69,7 +69,7 @@ def usensor(trig, echo):
         GPIO.output(trig, False)
 	#optimal speed before errors occured
         GPIO.output(trig, True)
-	time.sleep(0.02)                      #Delay of 0.00001 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
+	time.sleep(0.02)                      #Delay of 0.02 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
         GPIO.output(trig, False)
 
 
@@ -89,15 +89,21 @@ def usensor(trig, echo):
 
 
 def warningMessage(sensor):
-	if sensor == "Front":
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
-	elif sensor == "Right":
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
-	elif sensor == "Left":
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/ObjectFront.wav")
+	pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Warning460ms.wav")
 	pygame.mixer.music.play()
-	time.sleep(1.8)
-
+	time.sleep(0.48)
+	if sensor == "Front":
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Front400ms.wav")
+		pygame.mixer.music.play()
+		time.sleep(0.42)
+	elif sensor == "Right":
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Right280ms.wav")
+		pygame.mixer.music.play()
+		time.sleep(0.30)
+	elif sensor == "Left":
+		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Left460ms.wav")
+		pygame.mixer.music.play()
+		time.sleep(0.48)
 	return
 
 def curPos(warn_dist, trig, echo):
@@ -114,17 +120,17 @@ def curPos(warn_dist, trig, echo):
 
 	while True:
 		distance = dist_avg(trig, echo)
-		if dist_up >= distance and dist_down <= distance:
-			print "Stationary Distance: ", distance
-		elif distance > dist_up and distance > 10:
+		#if dist_up >= distance and dist_down <= distance:
+			#print "Stationary Distance: ", distance
+		if distance > dist_up and distance > 10:
 			#distance = dist_avg(trig, echo)
 			#if distance > dist_up and distance > 10:
-			warning=0
+			#warning=0
 			break
 		elif dist_down > distance and distance > 10:
                         #distance = dist_avg(trig, echo)
 			#if dist_down > distance and distance > 10:
-			warning=1
+			#warning=1
 			break
 		elif distance <= 10 and distance > 2:
                         distance = dist_avg(trig, echo)
@@ -134,13 +140,13 @@ def curPos(warn_dist, trig, echo):
 				break
 	return warning
 
-detection_range=100
+detection_range=200
 
 #MAIN
 Setup()
-
-stack = [0,0,0,0]
-stackSize = 8 # for starters buffer .18 miliseconds delay
+#the higher the stack size the less noises and more stable reading.
+stack = []
+stackSize = 2 # size 8 for starters buffer .18 miliseconds delay
 	
 def dist_avg(trig, echo):
 	readIn = usensor(trig, echo) # Grab Raw
