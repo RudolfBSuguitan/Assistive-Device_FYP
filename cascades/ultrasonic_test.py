@@ -16,6 +16,10 @@ import time                                #Import time library
 GPIO.setmode(GPIO.BCM)                     #Set GPIO pin numbering
 
 
+p_cycle=0.003
+stackSize=10
+
+
 ReferenceTrig = [25, 16, 23]
 ReferenceEcho = [8, 20, 24]
 ReferenceSensor = ["Front", "Right", "Left"]
@@ -69,7 +73,7 @@ def usensor(trig, echo):
         GPIO.output(trig, False)
 	#optimal speed before errors occured
         GPIO.output(trig, True)
-	time.sleep(0.02)                      #Delay of 0.02 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
+	time.sleep(p_cycle)                      #Delay of 0.02 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
         GPIO.output(trig, False)
 
 
@@ -140,13 +144,13 @@ def curPos(warn_dist, trig, echo):
 				break
 	return warning
 
-detection_range=200
+detection_range=50
 
 #MAIN
 Setup()
 #the higher the stack size the less noises and more stable reading.
 stack = []
-stackSize = 2 # size 8 for starters buffer .18 miliseconds delay
+#stackSize = 10 # size 8 for starters buffer .18 miliseconds delay
 	
 def dist_avg(trig, echo):
 	readIn = usensor(trig, echo) # Grab Raw
@@ -155,7 +159,7 @@ def dist_avg(trig, echo):
 		stack.pop(0)
 
 	strout = readIn,  " vs ",  round((sum(stack)/len(stack)),2)
-	print strout, time.time()
+	#print strout, time.time()
 
 	distance = round((sum(stack)/len(stack)),2)
 
@@ -163,11 +167,13 @@ def dist_avg(trig, echo):
 
 s_time=time.time()
 readings=0
+distance_avg=0
 while True:
 	for i in range(1):
 		#measuting the approximate time to sample in the data
 		distance = dist_avg(pin[i].trig, pin[i].echo)
- 		#readings+=1
+ 		readings+=1
+		distance_avg+=distance
 		#print "reading", readings," ", (time.time() - s_time)
         	if distance <= detection_range and distance > 20 :
 			#print "Checking Distance:", distance, "cm"  
@@ -176,6 +182,7 @@ while True:
 			#if distance <= detection_range and distance > 20:
 
 			warning = curPos(distance, pin[i].trig, pin[i].echo) 
+			
 			if warning == 1:
 				print "WARNING", dist_avg(pin[i].trig, pin[i].echo)
                                 warningMessage(pin[i].sensor)
@@ -189,7 +196,7 @@ while True:
 			print "Area of No Detection: ", distance
 	
 		if distance <= 10 and distance > 2:
-			time.sleep(0.5)
+			#time.sleep(0.5)
 			distance = dist_avg(pin[i].trig, pin[i].echo)
 			if distance <= 5 and distance > 2:
 				print "Preparing to Reboot. Distance is: ", distance
@@ -207,9 +214,10 @@ while True:
 		break
 	
 	#time to get the data or to sample in the code
-	#if (time.time()-s_time) > 60:
-		#print "reading", readings," ", (time.time() - s_time)
-		#break 	
+	if (time.time()-s_time) > 60:
+		print "reading", readings," ", (time.time() - s_time)
+		print "Average distance: ", round((distance_avg/readings),2)
+		break 	
 GPIO.cleanup()
 time.sleep(3)
 print "END"
