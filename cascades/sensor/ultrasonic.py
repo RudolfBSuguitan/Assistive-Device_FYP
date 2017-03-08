@@ -6,6 +6,7 @@
 #using other python file to play sounds
 
 from subprocess import call
+
 from Warnings import warningMessage
 from Warnings import n_warning
 
@@ -20,14 +21,15 @@ GPIO.setmode(GPIO.BCM)
 #recommended delay of 60ms 
 p_cycle=0.02	#able to optimize down to 20ms
 
+#size 8 for starters buffer 124  miliseconds delay
+stackSize=8
+
+detection_range=150
+
 #the higher the stack size the less noises and more stable reading.
 stackF = []
 stackR = []
 stackL = []
-#size 8 for starters buffer 124  miliseconds delay
-stackSize=8
-
-detection_range=200
 
 ReferenceTrig = [25, 16, 23]
 ReferenceEcho = [8, 20, 24]
@@ -53,33 +55,16 @@ def Setup():
 
 		print "--Setup--"
 		print "Sensor: ", pin[i].sensor, " Trigger: ", pin[i].trig, " Echo: ", pin[i].echo
-		time.sleep(1) 
-	 
-
-def call_reboot(trig, echo):
-	call_shut = 0
-	while True:
-		time.sleep(0.2)
-		distance = usensor(trig, echo)
-		print "Distance from Reboot Function", distance
-		if distance <= 5 and distance > 2:
-			call_shut+=1
-			if call_shut == 10:
-				print "Starting Reboot"
-				break
-		if distance > 5:
-			print "Cancelling Reboot"
-			time.sleep(0.3)
-			break
-	return call_shut
-	
+		time.sleep(0.5) 	
 
 def usensor(trig, echo):
 	pulse_start=0
 	pulse_end=0
+
         GPIO.output(trig, False)
 	#optimal speed before errors occured
         time.sleep(p_cycle)
+
 	GPIO.output(trig, True)
 	time.sleep(0.00001)                      #Delay of 0.02 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
         GPIO.output(trig, False)
@@ -89,7 +74,7 @@ def usensor(trig, echo):
 		pulse_start = time.time()              #Saves the last known time of LOW pulse
 		
 	while GPIO.input(echo)==1:               #Check whether the ECHO is HIGH
-		 pulse_end = time.time()                #Saves the last known time of HIGH pulse
+		pulse_end = time.time()                #Saves the last known time of HIGH pulse
 
 
         pulse_duration = pulse_end - pulse_start
@@ -99,30 +84,26 @@ def usensor(trig, echo):
 
         return distance
 
-def curPos(warn_dist, trig, echo, sensor):
+def curPos(trig, echo, sensor):
 	distance = dist_avg(trig, echo, sensor)
 	#increases sensitivity as object get closer to user
 	#the average distance a warning should be provided to the user is 1.8 m
 	#detection at 200 which calculates to 10percent threshold
-	dist_allowance = (distance*0.20)
+	dist_allowance = (distance*0.15)
 	dist_up = distance + dist_allowance
 	dist_down = distance - dist_allowance
 
-	warning=5
+	warning=0
 
 	while True:
-		distance = dist_avg(trig, echo, sensor)
-		#if dist_up >= distance and dist_down <= distance:
-			#print "Stationary Distance: ", distance
+		if dist_up >= distance and dist_down <= distance:
+			print "Stationary Distance: ", distance
 		if distance > dist_up and distance > 10:
-			#distance = dist_avg(trig, echo)
-			#if distance > dist_up and distance > 10:
 			warning=0
 			break
 		elif dist_down > distance and distance > 10:
-                        #distance = dist_avg(trig, echo)
-			#if dist_down > distance and distance > 10:
 			warning=1
+			print "Warning: ", distance
 			break
 		elif distance <= 10 and distance > 2:
                         distance = dist_avg(trig, echo, sensor)
@@ -130,133 +111,150 @@ def curPos(warn_dist, trig, echo, sensor):
                                 print "SSSPreparing to Reboot. Distance is: ", distance
                                 warning=2
 				break
+		distance = dist_avg(trig, echo, sensor)
 	return warning
 	
+#think about reinitializing the stack arrays
+
 def dist_avg(trig, echo, sensor):
 	readIn = usensor(trig, echo) # Grab Raw
 	if sensor == "Front":
 		stackF.append(readIn)
 		if len(stackF) > stackSize:
 			stackF.pop(0)
-
+			#del stackF[0]
 		#strout = readIn,  " vs ",  round((sum(stackF)/len(stackF)),1)
 		#calculating the speed of buffer
 		#print strout, time.time()
 
 		distance = round((sum(stackF)/len(stackF)),1)
+		print "Front", distance
+		#time.sleep(0.5)
 
 	elif sensor == "Right":
                 stackR.append(readIn)
                 if len(stackR) > stackSize:
                         stackR.pop(0)
-
+			#del stackR[0]
                 distance = round((sum(stackR)/len(stackR)),1)
+		print "Right", distance
+		#time.sleep(0.5)		
 
 	elif sensor == "Left":
                 stackL.append(readIn)
                 if len(stackL) > stackSize:
                         stackL.pop(0)
-
+			#del stackL[0]
                 distance = round((sum(stackL)/len(stackL)),1)
+		print "Left", distance
+		#time.sleep(0.5)
 
 	return distance
+
+
+def call_mode(mode, trig, echo, sensor):
+        call_shut = 0
+	if mode == 1:
+        	while True:
+                	distance = dist_avg(trig, echo)
+                	print "Distance from Reboot Function", distance
+                	if distance <= 5 and distance > 2:
+                        	call_shut+=1
+				if call_shut == 4:
+					print "Waiting"
+                        	elif call_shut == 8:
+                                	print "Mode 3"
+				elif call_shut == 12:
+					print "Shut Down"
+				elif call_shut > 15:
+					print "Cancelling"
+			time.sleep(1)
+        	return call_shut
+	elif mode == 3:
+		while True:
+			
+
 
 #testing the accuracy and speed
 #s_time=time.time()
 #readings=0
 #distance_avg=0
 
-def c_mode():
+def c_mode(mode):
 	num_shut=0
 	while True:
-		for i in range(3):
-			#1 min tests then 5 min tests
-			#measuring the approximate time to sample in the data
-			distance = dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
- 			#readings+=1
-			#distance_avg+=distance
+		#1 min tests then 5 min tests
+		#measuring  the approximate time to sample in the data
+		#readings+=1
+		#distance_avg+=distance
+		distancex=150
 		
-        		if distance <= detection_range and distance > 20 :
-				#print "Checking Distance:", distance, "cm"  
+		for x in range(no_mode):
+			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
+			print "Sensor test: ", distance
+			if distance <= distancex:
+				distancex = distance
+				i=x
 		
-				warning = curPos(distance, pin[i].trig, pin[i].echo, pin[i].sensor) 
+		if distancex < detection_range and distancex > 10 : 
+			print "Checking"		
+			warning = curPos(pin[i].trig, pin[i].echo, pin[i].sensor) 
 			
-				if warning == 1:
-					#print "WARNING", dist_avg(pin[i].trig, pin[i].echo)
-                                	warningMessage(pin[i].sensor)
-				#elif warning == 0:
-			 	#print "Object Moving Forward"
-				elif warning == 2:
-					print "Rebooting"
-					break
+			if warning == 1:
+				#print "WARNING", dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
+                                warningMessage(pin[i].sensor)
+			elif warning == 0:
+				print "Object Moving Forward"
+			elif warning == 2:
+				print "Rebooting"
 				
-			if distance <= 20 and distance > 10:
-				print "Area of No Detection: ", distance
+		#elif distance <= 20 and distance > 10:
+			#print "Area of No Detection: ", distance
 	
-			if distance <= 10 and distance > 2:
-				#time.sleep(0.5)
-				distance = dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
-				if distance <= 5 and distance > 2:
-					print "Preparing to Reboot. Distance is: ", distance
-					time.sleep(1.8)
-					num_shut=call_reboot(pin[i].trig, pin[i].echo, pin[i].sensor)
+		elif distancex <= 10 and distancex > 2:
+			#time.sleep(0.5)
+			distance = dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
+			if distance <= 5 and distance > 2:
+				print "Changing mode. Distance is: ", distance
+
+				num_shut=call_mode(mode, pin[i].trig, pin[i].echo, pin[i].sensor)
 			
-					if num_shut == 10:
-						print"Success"
-						break
-					else:
-						num_shut=0
-				else:
-					break
-		if num_shut == 10:
-			break
-	
-		#time to get the data or to sample in the code
-		#if (time.time()-s_time) > 300:
-			#print "reading", readings," ", (time.time() - s_time)
-			#print "Average distance: ", round((distance_avg/readings),2)
-			#print "Average reading: ", (readings/5)
+				#if num_shut == 10:
+					#print"Success"
+					#break
+				#else:
+					#num_shut=0
+			#else:
+				#break
+		#if num_shut == 10:
 			#break
+	
+	#time to get the data or to sample in the code
+	#if (time.time()-s_time) > 300:
+		#print "reading", readings," ", (time.time() - s_time)
+		#print "Average distance: ", round((distance_avg/readings),2)
+		#print "Average reading: ", (readings/5)
+		#break
 
-	return
-
-def n_mode():
-	num_shut=0
-	while True:
-		for i in range(3):
-                        distance = dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
-
-                        if distance <= detection_range and distance > 20:
-                                n_warning(distance, pin[i].trig, pin[i].echo, pin[i].sensor)
-
-                        if distance <= 20 and distance > 10:
-                                print "Area of No Detection: ", distance
-
-                        if distance <= 10 and distance > 2:
-                                distance = dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
-                                if distance <= 5 and distance > 2:
-                                        print "Preparing to Reboot. Distance is: ", distance
-                                        time.sleep(1.8)
-                                        num_shut=call_reboot(pin[i].trig, pin[i].echo, pin[i].sensor)
-
-                                        if num_shut == 10:
-                                                print"Success"
-                                                break
-                                        else:
-                                                num_shut=0
-                                else:
-                                        break
-
-		if num_shut == 10:
-                        break
-        return
+	return mode
 
 Setup()
-mode_num=0
-#while True:
-c_mode()
-#n_mode()
- 	
+front_mode=1
+three_mode=3
+num_mode=0
+#c_mode()
+while True:
+	if num_mode==1:
+		num_mode=c_mode(front_mode)
+	elif num_mode==2:
+		num_mode=c_mode(three_mode)
+	elif num_mode==3:
+		print "reboot"
+	else:
+		num_mode=c_mode(front_mode)	
+
+
+
 GPIO.cleanup()
 time.sleep(1)
 pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/beep-01a.mp3")
