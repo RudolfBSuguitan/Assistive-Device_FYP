@@ -13,9 +13,9 @@ from Warnings import n_warning
 import pygame
 pygame.mixer.init()
 
-import RPi.GPIO as GPIO
 import time
 
+import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 #recommended delay of 60ms 
@@ -25,6 +25,8 @@ p_cycle=0.02	#able to optimize down to 20ms
 stackSize=8
 
 detection_range=150
+
+send_msg_temp=0
 
 #the higher the stack size the less noises and more stable reading.
 stackF = []
@@ -177,16 +179,22 @@ def call_mode(m_num):
 			time.sleep(2)
 			btn_num=m_num
 
-	#if m_num == 3:
-		#btn_front_cnt=0
-		#while GPIO.input(BTNMF)==0:
-			#print "Button Front Mode"
-			#btn_front_cnt+=1
-			#time.sleep(1)
-			#if btn_front_cnt == 3:
-				#print "Success"
-				#btn_num=1
-		#btn_front_cnt=0
+	btn_panic_cnt=0
+	while GPIO.input(BTNMT)==0:
+		print "Button Panic Mode"
+		btn_panic_cnt+=1
+		time.sleep(1)
+		if btn_panic_cnt == 3:
+			print "Sending Message..."
+			#call('./runScript.sh')
+			btn_num=30
+			time.sleep(2)
+			break
+		if btn_panic_cnt < 3 and GPIO.input(BTNMT)==1:
+			print "Cancelling"
+			time.sleep(2)
+			btn_num=m_num
+
 
 	btn_mode_cnt=0
 	while GPIO.input(BTNMF)==0:
@@ -253,20 +261,22 @@ def c_mode(mode):
 	
 
 
-		if GPIO.input(BTNSHUT)==0:
-                        print "Button Shutdown.."
+		if GPIO.input(BTNSHUT)==0 or GPIO.input(BTNMF)==0 or GPIO.input(BTNMT)==0:
+                        print "Button pressed..."
 			mode_num=call_mode(mode)
-
-                if GPIO.input(BTNMF)==0:
-                        print "Button Mode Changer"
-			mode_num=call_mode(mode)
-
-                if GPIO.input(BTNMT)==0:
-                        print "Button Panic Mode"
-			call_mode(mode)
 
 		if mode_num == 10 or mode_num == 11 or mode_num == 22:
 			break
+
+		elif mode_num == 30:
+			global send_msg_temp
+			if mode == 1:
+				send_msg_temp=11
+			elif mode == 3:
+				send_msg_temp=22
+			print send_msg_temp
+			break
+			
 	
 		#time to get the data or to sample in the code
 		#if (time.time()-s_time) > 300:
@@ -280,7 +290,6 @@ def c_mode(mode):
 Setup()
 front_mode=1
 three_mode=3
-det_mode=3
 num_mode=0
 
 #Think about changing the buffer size and delay time
@@ -300,10 +309,15 @@ while True:
 	elif num_mode==33:
 		print "Changing to Distance Mode"
 		break
-		num_mode=d_mode(det_mode)
+		num_mode=d_mode(three_mode)
 	elif num_mode==10:
 		print "Rebooting"
 		break
+	elif num_mode==30:
+		print "Sending Message"
+		call('./runScript.sh')
+		num_mode=send_msg_temp
+		print num_mode
 	elif num_mode==0:
 		print "Default Front Mode"
 		time.sleep(2)
