@@ -43,6 +43,13 @@ class Pin:
 #define class instances (3 objects)
 pin= [Pin() for i in range(3)]
 
+#for the buttons - changing mode or shutting down
+BTNSHUT=26 #Far Right
+BTNMF=17 #Left
+BTNMT=27 #Right
+GPIO.setup(BTNSHUT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNMF, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNMT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def Setup():
 	for i in range(3):
@@ -152,28 +159,59 @@ def dist_avg(trig, echo, sensor):
 	return distance
 
 
-def call_mode(mode, trig, echo, sensor):
-        call_shut = 0
-	if mode == 1:
-        	while True:
-                	distance = dist_avg(trig, echo)
-                	print "Distance from Reboot Function", distance
-                	if distance <= 5 and distance > 2:
-                        	call_shut+=1
-				if call_shut == 4:
-					print "Waiting"
-                        	elif call_shut == 8:
-                                	print "Mode 3"
-				elif call_shut == 12:
-					print "Shut Down"
-				elif call_shut > 15:
-					print "Cancelling"
-			time.sleep(1)
-        	return call_shut
-	elif mode == 3:
-		while True:
-			
+def call_mode(m_num):
+	btn_num=0
+	btn_shut_cnt=0
+	while GPIO.input(BTNSHUT)==0:
+		print "Button Shutdown"
+		btn_shut_cnt+=1
+		time.sleep(1)
 
+		if btn_shut_cnt == 3:
+			print "Success"
+			btn_num=10
+			time.sleep(2)
+			break
+		if btn_shut_cnt < 3 and GPIO.input(BTNSHUT)==1:
+			print "Cancelling"
+			time.sleep(2)
+			btn_num=m_num
+
+	#if m_num == 3:
+		#btn_front_cnt=0
+		#while GPIO.input(BTNMF)==0:
+			#print "Button Front Mode"
+			#btn_front_cnt+=1
+			#time.sleep(1)
+			#if btn_front_cnt == 3:
+				#print "Success"
+				#btn_num=1
+		#btn_front_cnt=0
+
+	btn_mode_cnt=0
+	while GPIO.input(BTNMF)==0:
+		print "Changing Mode..."
+		btn_mode_cnt+=1
+		time.sleep(1)
+
+		if btn_mode_cnt == 3:
+			if m_num == 3:
+				print "Changing to Front Mode..."
+				btn_num=11
+				time.sleep(2)
+				break
+			elif m_num == 1:
+				print "Changing to Three Mode..."
+				btn_num=22
+				time.sleep(2)
+				break
+			break
+		if btn_mode_cnt < 3 and GPIO.input(BTNMF)==1:
+			print "Cancelling"
+			time.sleep(2)
+			btn_num=m_num	
+
+	return btn_num
 
 #testing the accuracy and speed
 #s_time=time.time()
@@ -182,6 +220,8 @@ def call_mode(mode, trig, echo, sensor):
 
 def c_mode(mode):
 	num_shut=0
+	mode_num=0
+	ret_mode_num=0
 	while True:
 		#1 min tests then 5 min tests
 		#measuring  the approximate time to sample in the data
@@ -189,7 +229,7 @@ def c_mode(mode):
 		#distance_avg+=distance
 		distancex=150
 		
-		for x in range(no_mode):
+		for x in range(mode):
 			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
 			print "Sensor test: ", distance
 			if distance <= distancex:
@@ -211,55 +251,71 @@ def c_mode(mode):
 		#elif distance <= 20 and distance > 10:
 			#print "Area of No Detection: ", distance
 	
-		elif distancex <= 10 and distancex > 2:
-			#time.sleep(0.5)
-			distance = dist_avg(pin[i].trig, pin[i].echo, pin[i].sensor)
-			if distance <= 5 and distance > 2:
-				print "Changing mode. Distance is: ", distance
 
-				num_shut=call_mode(mode, pin[i].trig, pin[i].echo, pin[i].sensor)
-			
-				#if num_shut == 10:
-					#print"Success"
-					#break
-				#else:
-					#num_shut=0
-			#else:
-				#break
-		#if num_shut == 10:
-			#break
+
+		if GPIO.input(BTNSHUT)==0:
+                        print "Button Shutdown.."
+			mode_num=call_mode(mode)
+
+                if GPIO.input(BTNMF)==0:
+                        print "Button Mode Changer"
+			mode_num=call_mode(mode)
+
+                if GPIO.input(BTNMT)==0:
+                        print "Button Panic Mode"
+			call_mode(mode)
+
+		if mode_num == 10 or mode_num == 11 or mode_num == 22:
+			break
 	
-	#time to get the data or to sample in the code
-	#if (time.time()-s_time) > 300:
-		#print "reading", readings," ", (time.time() - s_time)
-		#print "Average distance: ", round((distance_avg/readings),2)
-		#print "Average reading: ", (readings/5)
-		#break
+		#time to get the data or to sample in the code
+		#if (time.time()-s_time) > 300:
+			#print "reading", readings," ", (time.time() - s_time)
+			#print "Average distance: ", round((distance_avg/readings),2)
+			#print "Average reading: ", (readings/5)
+			#break
 
-	return mode
+	return mode_num
 
 Setup()
 front_mode=1
 three_mode=3
+det_mode=3
 num_mode=0
-#c_mode()
+
+#Think about changing the buffer size and delay time
 while True:
-	if num_mode==1:
+	if num_mode==11:
+		print "Front Mode"
+		stackF=[]
+		stackR=[]
+		stackL=[]
 		num_mode=c_mode(front_mode)
-	elif num_mode==2:
+	elif num_mode==22:
+		print "Three Mode"
+		stackF=[]
+		stackR=[]
+		stackL=[]
 		num_mode=c_mode(three_mode)
-	elif num_mode==3:
-		print "reboot"
-	else:
+	elif num_mode==33:
+		print "Changing to Distance Mode"
+		break
+		num_mode=d_mode(det_mode)
+	elif num_mode==10:
+		print "Rebooting"
+		break
+	elif num_mode==0:
+		print "Default Front Mode"
+		time.sleep(2)
 		num_mode=c_mode(front_mode)	
 
 
 
 GPIO.cleanup()
 time.sleep(1)
-pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/beep-01a.mp3")
-pygame.mixer.music.play()
-time.sleep(0.2)
+#pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/beep-01a.mp3")
+#pygame.mixer.music.play()
+print "Finish"
 #call('reboot')
 
 
