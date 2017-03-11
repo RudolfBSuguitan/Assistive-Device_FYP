@@ -17,6 +17,9 @@ stackL = []
 BTNSHUT=26 #Far Right
 BTNMF=17 #Left
 BTNMT=27 #Right
+GPIO.setup(BTNSHUT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNMF, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNMT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def usensor(trig, echo):
 	pulse_start=0
@@ -47,19 +50,20 @@ def usensor(trig, echo):
 
 def cur_pos(trig, echo, sensor):
 	distance = dist_avg(trig, echo, sensor)
-	dist_allowance = (distance*0.20)
+	dist_allowance = (distance*0.10)
 	dist_up = distance + dist_allowance
 	dist_down = distance - dist_allowance
 
 	warning=0
 
 	while True:
+		distance = dist_avg(trig, echo, sensor)
 		if dist_up >= distance and dist_down <= distance:
 			print "Stationary Distance: ", distance
-		elif distance > dist_up and distance > 10:
+		elif distance > dist_up:
 			warning=0
 			break
-		elif dist_down > distance and distance > 10:
+		elif dist_down > distance:
 			warning=1
 			print "Warning: ", distance
 			break
@@ -67,21 +71,21 @@ def cur_pos(trig, echo, sensor):
 		if GPIO.input(BTNSHUT)==0 or GPIO.input(BTNMF)==0 or GPIO.input(BTNMT)==0:
                         print "Button pressed..."
                         break
-		
-		distance = dist_avg(trig, echo, sensor)
 	return warning
 	
 
 def dist_avg(trig, echo, sensor):
+	global stackF
+	global stackR
+	global stackL
 	readIn = usensor(trig, echo)
 	if sensor == "Front":
 		stackF.append(readIn)
 		if len(stackF) > stackSize:
 			stackF.pop(0)
-
 		distance = round((sum(stackF)/len(stackF)),1)
-		print "Front", distance
-
+		print "Size:", len(stackF), " Front", distance
+		
 	elif sensor == "Right":
                 stackR.append(readIn)
                 if len(stackR) > stackSize:

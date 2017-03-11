@@ -1,4 +1,5 @@
 from subprocess import call
+import subprocess
 
 from Warnings import warn_msg
 from Distance import dist_avg
@@ -8,6 +9,8 @@ import time
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
+
+LOOP=False
 
 detection_range=150
 
@@ -67,17 +70,23 @@ def call_mode(m_num, bpin, btn):
 			print "Success"
 			if btn == "Shutdown":
 				print "Rebooting"
+				L.terminate()
+				R.terminate()
 				btn_num=10
 				time.sleep(2)
 				break
 			elif btn == "Mode":
 				if m_num == 3:
                                 	print "Changing to Front Mode..."
+					L.terminate()
+					R.terminate()
                                 	btn_num=11
                                 	time.sleep(2)
                                 	break
                         	elif m_num == 1:
                                 	print "Changing to Three Mode..."
+					L = subprocess.Popen(['python', 'UltrasonicLeft.py'])
+					R = subprocess.Popen(['python', 'UltrasonicRight.py'])
                                 	btn_num=22
                                 	time.sleep(2)
                                 	break
@@ -97,23 +106,16 @@ def call_mode(m_num, bpin, btn):
 def c_mode(mode):
 	mode_num=0
 	while True:
-		distancex=150
+		start=time.clock()
+		distance = dist_avg(pin[0].trig, pin[0].echo, pin[0].sensor)
+		print time.clock()-start
 		
-		for x in range(mode):
-			start=time.clock()
-			#print time.clock()-start
-			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
-			print time.clock()-start
-			if distance <= distancex:
-				distancex = distance
-				i=x
-		
-		if distancex < detection_range and distancex > 10 : 
+		if distance < detection_range and distance > 10 : 
 			print "Checking"		
-			warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
+			warning = cur_pos(pin[0].trig, pin[0].echo, pin[0].sensor) 
 			
 			if warning == 1:
-                                warn_msg(pin[i].sensor)
+                                warn_msg(pin[0].sensor)
 			elif warning == 0:
 				print "Object Moving Forward"
 
@@ -147,9 +149,11 @@ def main():
 	while True:
 		if num_mode==11:
 			print "Front Mode"
+			#kill the other scripts using pid
 			num_mode=c_mode(front_mode)
 		elif num_mode==22:
 			print "Three Mode"
+			#start the py the get pid
 			num_mode=c_mode(three_mode)
 		elif num_mode==33:
 			print "Changing to Distance Mode"

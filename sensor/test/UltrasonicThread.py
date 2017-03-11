@@ -34,7 +34,38 @@ class Button:
 	def __init__(self):
 		self.pin = 0
 		self.button = 0
-btn=[Button() for i in range(3)] 
+btn=[Button() for i in range(3)]
+
+import threading
+
+LOOP=True
+
+class myThread(threading.Thread):
+    def __init__(self, threadID, ttrig, techo, tsensor):
+        threading.Thread.__init__(self)
+	self.threadID = threadID
+        self.trig = ttrig
+        self.echo = techo
+        self.sensor = tsensor
+    def run(self):
+        print "Starting ", self.sensor
+        runThreads(self.trig, self.echo, self.sensor)
+	print "Stopping ", self.sensor
+
+def runThreads(trig, echo, sensor):
+	global LOOP
+	while LOOP:
+		start = time.clock()
+		distance = dist_avg(trig, echo, sensor)
+		end = time.clock()-start
+		print end
+
+SensorThread = ["FRONT", "RIGHT", "LEFT"]
+# Create new threads
+#for i in range(3):
+	#SensorThread[i] = myThread(i+1, pin[i].trig, pin[i].echo, pin[i].sensor)
+	#print SensorThread[i]
+
 
 def setup():
 	for i in range(3):
@@ -66,6 +97,9 @@ def call_mode(m_num, bpin, btn):
 		if count == 3:
 			print "Success"
 			if btn == "Shutdown":
+				global LOOP
+                        	LOOP=False
+
 				print "Rebooting"
 				btn_num=10
 				time.sleep(2)
@@ -97,25 +131,23 @@ def call_mode(m_num, bpin, btn):
 def c_mode(mode):
 	mode_num=0
 	while True:
-		distancex=150
+		#distancex=150
 		
-		for x in range(mode):
-			start=time.clock()
-			#print time.clock()-start
-			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
-			print time.clock()-start
-			if distance <= distancex:
-				distancex = distance
-				i=x
+		#for x in range(mode):
+			#distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
+
+			#if distance <= distancex:
+				#distancex = distance
+				#i=x
 		
-		if distancex < detection_range and distancex > 10 : 
-			print "Checking"		
-			warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
+		#if distancex < detection_range and distancex > 10 : 
+			#print "Checking"		
+			#warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
 			
-			if warning == 1:
-                                warn_msg(pin[i].sensor)
-			elif warning == 0:
-				print "Object Moving Forward"
+			#if warning == 1:
+                                #warn_msg(pin[i].sensor)
+			#elif warning == 0:
+				#print "Object Moving Forward"
 
 		for i in range(3):
                         if GPIO.input(btn[i].pin)==0:
@@ -135,6 +167,11 @@ def c_mode(mode):
 			break
 
 	return mode_num
+def controlThread(num):
+	for i in range(num):
+                myThread(i+1, pin[i].trig, pin[i].echo, pin[i].sensor).start()
+                #print pin[i].sensor, pin[i].trig, pin[i].echo
+
 
 #Think about changing the buffer size and delay time
 #While True then false the other scripts
@@ -143,6 +180,9 @@ def main():
 	front_mode=1
 	three_mode=3
 	num_mode=0
+	num=1
+
+	controlThread(num)
 
 	while True:
 		if num_mode==11:
