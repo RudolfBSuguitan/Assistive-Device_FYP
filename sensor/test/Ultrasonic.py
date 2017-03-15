@@ -98,7 +98,8 @@ def c_mode(mode):
 	mode_num=0
 	while True:
 		distancex=150
-		
+
+		s_time = time.clock()
 		for x in range(mode):
 			start=time.clock()
 			#print time.clock()-start
@@ -107,6 +108,7 @@ def c_mode(mode):
 			if distance <= distancex:
 				distancex = distance
 				i=x
+		print "Time delay: ", time.clock()-s_time
 		
 		if distancex < detection_range and distancex > 10 : 
 			print "Checking"		
