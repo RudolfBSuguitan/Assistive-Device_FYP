@@ -64,10 +64,8 @@ def send_mail(u_name, u_pass):
 
 		resp = 'success'
 		print "Message Sent!"
-		global dirImg
-		dirImg=[]
 	except:
-		resp 'failure'
+		resp = 'failure'
    		print ("Error: unable to send email")
 
 	return resp
@@ -85,3 +83,4 @@ if captured == 'success':
 		print 'Unable to send mail'
 elif captured == 'failure':
 	print 'Unable to capture images'
+dirImg=[] #reinitialize

@@ -5,6 +5,7 @@ from Distance import dist_avg
 from Distance import cur_pos
 
 import time
+import threading
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
@@ -22,10 +23,16 @@ ReferenceSensor = ["Front", "Right", "Left"]
 ReferencePin = [26, 17, 27]
 ReferenceButton = ["Shutdown", "Mode", "Panic"]
 
+LOOP=True
+
+sf_distance=0
+sr_distance=0
+sl_distance=0
+
 class Sensor:
-        def __init__(self):
-                self.trig = 0
-                self.echo = 0
+	def __init__(self):
+		self.trig = 0
+		self.echo = 0
 		self.sensor = 0
 #define class instances (3 objects)
 pin= [Sensor() for i in range(3)]
@@ -35,37 +42,6 @@ class Button:
 		self.pin = 0
 		self.button = 0
 btn=[Button() for i in range(3)]
-
-import threading
-
-LOOP=True
-
-class myThread(threading.Thread):
-    def __init__(self, threadID, ttrig, techo, tsensor):
-        threading.Thread.__init__(self)
-	self.threadID = threadID
-        self.trig = ttrig
-        self.echo = techo
-        self.sensor = tsensor
-    def run(self):
-        print "Starting ", self.sensor
-        runThreads(self.trig, self.echo, self.sensor)
-	print "Stopping ", self.sensor
-
-def runThreads(trig, echo, sensor):
-	global LOOP
-	while LOOP:
-		start = time.clock()
-		distance = dist_avg(trig, echo, sensor)
-		end = time.clock()-start
-		print end
-
-SensorThread = ["FRONT", "RIGHT", "LEFT"]
-# Create new threads
-#for i in range(3):
-	#SensorThread[i] = myThread(i+1, pin[i].trig, pin[i].echo, pin[i].sensor)
-	#print SensorThread[i]
-
 
 def setup():
 	for i in range(3):
@@ -116,11 +92,6 @@ def call_mode(m_num, bpin, btn):
                                 	time.sleep(2)
                                 	break
                         	break
-			elif btn == "Panic":
-				print "Sending Message"
-				btn_num=30
-				time.sleep(2)
-				break
 
 		if count < 3 and GPIO.input(bpin)==1:
 			print "Cancelling"
@@ -128,26 +99,43 @@ def call_mode(m_num, bpin, btn):
 			btn_num=m_num
 	return btn_num
 
+def runThread(trig, echo, sensor):
+	global LOOP
+	global sf_distance
+	global sr_distance
+	global sl_distance
+
+	while LOOP:
+		if sensor == 'Front':
+			s_time = time.clock()
+			sf_distance = dist_avg(trig, echo, sensor)
+			print time.clock() - s_time
+		elif sensor == 'Right':
+			sr_distance = dist_avg(trig, echo, sensor)
+		elif sensor == 'Left':
+			s1_distance = dist_avg(trig, echo, sensor)
+
+def startThread(mode):
+	if mode == 1:
+		s1T = threading.Thread(target=runThread, args=(pin[0].trig, pin[0].echo, pin[0].sensor))
+		print "Starting Thread"
+		time.sleep(2)
+		s1T.start()
+		print "Stopping Thread"
+		time.sleep(2)
+	elif mode == 3:
+		s1T = threading.Thread(target=runThread, args=(pin[0].trig, pin[0].echo, pin[0].sensor))
+		s2T = threading.Thread(target=runThread, args=(pin[1].trig, pin[1].echo, pin[1].sensor))
+		s3T = threading.Thread(target=runThread, args=(pin[2].trig, pin[2].echo, pin[2].sensor))
+
+		s1T.start()
+		s2T.start()
+		s3T.start()
+
 def c_mode(mode):
 	mode_num=0
+	startThread(mode)
 	while True:
-		#distancex=150
-		
-		#for x in range(mode):
-			#distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
-
-			#if distance <= distancex:
-				#distancex = distance
-				#i=x
-		
-		#if distancex < detection_range and distancex > 10 : 
-			#print "Checking"		
-			#warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
-			
-			#if warning == 1:
-                                #warn_msg(pin[i].sensor)
-			#elif warning == 0:
-				#print "Object Moving Forward"
 
 		for i in range(3):
                         if GPIO.input(btn[i].pin)==0:
@@ -158,31 +146,13 @@ def c_mode(mode):
 		if mode_num == 10 or mode_num == 11 or mode_num == 22:
 			break
 
-		elif mode_num == 30:
-			global send_msg_temp
-			if mode == 1:
-				send_msg_temp=11
-			elif mode == 3:
-				send_msg_temp=22
-			break
-
 	return mode_num
-def controlThread(num):
-	for i in range(num):
-                myThread(i+1, pin[i].trig, pin[i].echo, pin[i].sensor).start()
-                #print pin[i].sensor, pin[i].trig, pin[i].echo
 
-
-#Think about changing the buffer size and delay time
-#While True then false the other scripts
-#create a class each
 def main():
 	front_mode=1
 	three_mode=3
 	num_mode=0
 	num=1
-
-	controlThread(num)
 
 	while True:
 		if num_mode==11:
@@ -191,17 +161,12 @@ def main():
 		elif num_mode==22:
 			print "Three Mode"
 			num_mode=c_mode(three_mode)
-		elif num_mode==33:
-			print "Changing to Distance Mode"
-			break
-			num_mode=d_mode(three_mode)
 		elif num_mode==10:
 			print "Rebooting"
+			global LOOP
+			LOOP=False
+			time.sleep(2)
 			break
-		elif num_mode==30:
-			print "Sending Message"
-			call('./runScript.sh')
-			num_mode=send_msg_temp
 		elif num_mode==0:
 			print "Default Front Mode"
 			time.sleep(2)
