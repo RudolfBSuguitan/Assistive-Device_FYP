@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from picamera import PiCamera
 from smtplib import SMTP
+from Warnings import respMessage
 import smtplib
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -34,6 +35,7 @@ msg.attach(text)
 
 def capture(c_num): 
 	try:
+		respMessage("CapLoct")
 		for x in range(c_num):
 			camera.resolution = (1024, 768)
 			camera.start_preview()
@@ -50,6 +52,7 @@ def capture(c_num):
 
 def send_mail(u_name, u_pass):
 	try:
+		respMessage("SendingMail")
 		for file in dirImg:
 			fp = open(file, 'rb')
 			img = MIMEImage(fp.read())
@@ -74,13 +77,17 @@ num=2
 captured=capture(num)
 
 if captured == 'success':
+	respMessage("LoctCaptured")
 	print 'Images captured'
 	s_mail=send_mail(uname, upass)
 
 	if s_mail == 'success':
+		respMessage("ESent")
 		print 'Mail sent successfully'
 	elif s_mail == 'failure':
+		respMessage("Error")
 		print 'Unable to send mail'
 elif captured == 'failure':
+	respMessage("Error")
 	print 'Unable to capture images'
 dirImg=[] #reinitialize

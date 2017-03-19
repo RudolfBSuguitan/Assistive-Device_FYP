@@ -1,5 +1,5 @@
 #uses python 3
-
+from Warnings import respMessage
 import urllib.request
 import urllib.parse
 import json
@@ -13,6 +13,7 @@ message='Please check your email. A user needs assistance'
  
 def sendSMS(uname, hashCode, numbers, sender, message):
 	try:
+		respMessage("SendingSMS")
 		data =  urllib.parse.urlencode({'username': uname, 'hash': hashCode, 'numbers': numbers, 'message' : message, 'sender': sender})
 		data = data.encode('utf-8')
 		request = urllib.request.Request("http://api.txtlocal.com/send/?")
@@ -27,6 +28,8 @@ def sendSMS(uname, hashCode, numbers, sender, message):
 resp =  sendSMS(username, hash, receiver, sender, message)
 print (resp)
 if resp == 'failure' or resp == 'Error':
+	respMessage("Error")
 	print ('Error: Unable to send text message')
 elif resp == 'success':
+	respMessage("MSent")
 	print ('Success: Text Message sent successfully')

@@ -1,6 +1,7 @@
 from subprocess import call
 
 from Warnings import warn_msg
+from Warnings import respMessage
 from Distance import dist_avg
 from Distance import cur_pos
 
@@ -9,11 +10,11 @@ import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
-detection_range=150
+detection_range=100
 
 send_msg_temp=0
 
-exitFlag=0
+LOOP=True
 
 ReferenceTrig = [25, 16, 23]
 ReferenceEcho = [8, 20, 24]
@@ -58,12 +59,23 @@ def setup():
 def call_mode(m_num, bpin, btn):
 	btn_num=0
 	count=0
+
+	if btn == "Panic":
+		respMessage("Assist")
+	elif btn == "Shutdown":
+		respMessage("Reboot")
+	elif btn == "Mode" and m_num == 1:
+		respMessage(3)
+	elif btn == "Mode" and m_num == 3:
+		respMessage(1)
+
 	while GPIO.input(bpin)==0:
 		print "Button: ", btn
 		count+=1
 		time.sleep(1)
 
 		if count == 3:
+			respMessage("Beep")
 			print "Success"
 			if btn == "Shutdown":
 				print "Rebooting"
@@ -89,6 +101,7 @@ def call_mode(m_num, bpin, btn):
 				break
 
 		if count < 3 and GPIO.input(bpin)==1:
+			respMessage("Cancel")
 			print "Cancelling"
 			time.sleep(2)
 			btn_num=m_num
@@ -97,18 +110,18 @@ def call_mode(m_num, bpin, btn):
 def c_mode(mode):
 	mode_num=0
 	while True:
-		distancex=150
+		distancex=100
 
-		s_time = time.clock()
+		#s_time = time.clock()
 		for x in range(mode):
-			start=time.clock()
+			#start=time.clock()
 			#print time.clock()-start
 			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
-			print time.clock()-start
+			#print time.clock()-start
 			if distance <= distancex:
 				distancex = distance
 				i=x
-		print "Time delay: ", time.clock()-s_time
+		#print "Time delay: ", time.clock()-s_time
 		
 		if distancex < detection_range and distancex > 10 : 
 			print "Checking"		
@@ -118,12 +131,13 @@ def c_mode(mode):
                                 warn_msg(pin[i].sensor)
 			elif warning == 0:
 				print "Object Moving Forward"
-
+		s_time=time.clock()
 		for i in range(3):
                         if GPIO.input(btn[i].pin)==0:
 				print "Button pressed..."
 				mode_num=call_mode(mode, btn[i].pin, btn[i].button)
 				break
+		print "TTime delay: ", time.clock()-s_time
 
 		if mode_num == 10 or mode_num == 11 or mode_num == 22:
 			break
