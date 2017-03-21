@@ -33,28 +33,27 @@ def camThread():
         	ret, OriginalFrame = video.read()
         	gray = cv2.cvtColor(OriginalFrame, cv2.COLOR_BGR2GRAY)
 
-        	#signs = sign_cascade.detectMultiScale(gray, 5, 5)
-        	ped = pedBtn.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=6, minSize=(40, 40), maxSize=(90,90))
-		#traffic_light2 traf = TrafL.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(45, 45), maxSize=(60, 60))
-		traf = TrafL.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(60, 60), maxSize=(80, 80))
+        	ped = pedBtn.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=5, minSize=(45, 45), maxSize=(65,65))
+		traf = TrafL.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=5, minSize=(45, 45), maxSize=(60, 60))
+		#traf = TrafL.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(60, 60), maxSize=(80, 80))
 		cSign = cleanSign.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(65, 65), maxSize=(90,90))
-		stopSign = stop2.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=6, minSize=(60, 60), maxSize=(80, 80))
-		Bus = dBus.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=6, minSize=(55, 55), maxSize=(75, 75))
+		stopSign = stop2.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(60, 60), maxSize=(80, 80))
+		Bus = dBus.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=6, minSize=(55, 55), maxSize=(75, 75))
 
 		print traf
 		for (x,y,w,h) in Bus:
                 	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                 	font = cv2.FONT_HERSHEY_SIMPLEX
-                	cv2.putText(OriginalFrame, 'Bus Stop', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                	cv2.putText(OriginalFrame, 'Bus', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
                 	print "Bus Stop Detected"
                 	itemPos(x)
 
-		#for (x,y,w,h) in traf:
-                	#cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
-                	#font = cv2.FONT_HERSHEY_SIMPLEX
-                	#cv2.putText(OriginalFrame, 'TrafficLight', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                	#print "Traffic Light Detected"
-                	#itemPos(x)
+		for (x,y,w,h) in traf:
+                	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
+                	font = cv2.FONT_HERSHEY_SIMPLEX
+                	cv2.putText(OriginalFrame, 'TrafficLight', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                	print "Traffic Light Detected"
+                	itemPos(x)
 
 
         	for (x,y,w,h) in ped:
