@@ -4,7 +4,7 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 #recommended delay of 60ms 
-p_cycle=0.02	#able to optimize down to 20ms
+p_cycle=0.06	#able to optimize down to 20ms
 
 #size 8 for starters buffer 124  miliseconds delay
 stackSize=8
@@ -14,12 +14,12 @@ stackF = []
 stackR = []
 stackL = []
 
-BTNSHUT=26 #Far Right
-BTNMF=17 #Left
-BTNMT=27 #Right
-GPIO.setup(BTNSHUT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(BTNMF, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(BTNMT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#BTNSHUT=26 #Far Right
+#BTNMF=17 #Left
+#BTNMT=27 #Right
+#GPIO.setup(BTNSHUT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#GPIO.setup(BTNMF, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#GPIO.setup(BTNMT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def usensor(trig, echo):
 	pulse_start=0
@@ -68,9 +68,9 @@ def cur_pos(trig, echo, sensor):
 			print "Warning: ", distance
 			break
 		
-		if GPIO.input(BTNSHUT)==0 or GPIO.input(BTNMF)==0 or GPIO.input(BTNMT)==0:
-                        print "Button pressed..."
-                        break
+		#if GPIO.input(BTNSHUT)==0 or GPIO.input(BTNMF)==0 or GPIO.input(BTNMT)==0:
+                        #print "Button pressed..."
+                        #break
 	return warning
 	
 
