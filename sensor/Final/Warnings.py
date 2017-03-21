@@ -7,7 +7,7 @@ def respMessage(process):
 	ms_time=0
 	if process == "Beep":
 		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/beep-01a.mp3"
-		ms_time=0.2
+		ms_time=0.05
 
 	elif process == 1:
 		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/1mode.wav"
