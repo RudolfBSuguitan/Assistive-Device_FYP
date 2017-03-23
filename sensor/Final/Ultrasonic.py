@@ -5,6 +5,7 @@ from Warnings import respMessage
 from Distance import dist_avg
 from Distance import cur_pos
 
+from timeit import default_timer as timer
 import time
 import numpy as np
 import cv2
@@ -29,6 +30,7 @@ stop2 = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/
 #video = cv2.VideoCapture(0)
 
 send_msg_temp=0
+send_msg_temp2=0
 
 LOOP=False
 
@@ -138,7 +140,7 @@ def camThread():
                         	print "Clean Sign Detected"
                         	itemPos(x)
 
-			cv2.imshow("Main Frame", OriginalFrame)
+			#cv2.imshow("Main Frame", OriginalFrame)
 
 			k = cv2.waitKey(1) & 0xFF
                 	if k == 27:
@@ -146,8 +148,8 @@ def camThread():
 
 		elif LOOP == False:
 			time.sleep(2)
-        		video.release()
-        		cv2.destroyAllWindows()
+        		#video.release()
+        		#cv2.destroyAllWindows()
 			break
 			
 	#time.sleep(2)
@@ -155,7 +157,18 @@ def camThread():
         #cv2.destroyAllWindows()
 	return
 
-#camT=threading.Thread(target=camThread, args=())
+def startThread():
+	global LOOP
+	global send_msg_temp2
+	send_msg_temp2=0
+	print "Starting Camera"
+        LOOP=True
+        print LOOP
+       	time.sleep(2)
+        threading.Thread(target=camThread, args=()).start()
+
+	return
+
 
 def call_mode(m_num, bpin, btn):
 	btn_num=0
@@ -181,6 +194,8 @@ def call_mode(m_num, bpin, btn):
 			print "Success"
 			if btn == "Shutdown":
 				print "Rebooting"
+				LOOP=False
+				print LOOP
 				btn_num=10
 				time.sleep(2)
 				break
@@ -197,26 +212,25 @@ def call_mode(m_num, bpin, btn):
                                 	break
                         	break
 			elif btn == "Panic":
+				global send_msg_temp2
+				print LOOP
+				if LOOP == True:
+					send_msg_temp2=1
+					LOOP=False
+					print LOOP
 				print "Sending Message"
+				#LOOP=False
 				btn_num=30
-				time.sleep(2)
+				time.sleep(5)
 				break
 			elif btn == "PiCam":
 				if LOOP == False:
-					print "Starting Camera"
-					LOOP=True
-					print LOOP
-					time.sleep(2)
-					threading.Thread(target=camThread, args=()).start()
-					#camT.start()
+					startThread()
 				elif LOOP == True:
 					print "Disabling Camera"
 					LOOP=False
 					print LOOP
 					time.sleep(2)
-					#threading.Thread(target=camThread, args=()).join()
-					#video.release()
-        				#cv2.destroyAllWindows()
 				btn_num=m_num
 
 		if count < 3 and GPIO.input(bpin)==1:
@@ -230,18 +244,13 @@ def c_mode(mode):
 	mode_num=0
 	while True:
 		distancex=100
-
-		s_time = time.clock()
+		s_time=timer()
 		for x in range(mode):
-			#start=time.clock()
-			#print time.clock()-start
 			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
-			#print time.clock()-start
 			if distance <= distancex:
 				distancex = distance
 				i=x
-		print "Time delay: ", time.clock()-s_time
-		
+		print "Time: ", timer()-s_time
 		if distancex < detection_range and distancex > 10 : 
 			print "Checking"		
 			warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
@@ -250,13 +259,12 @@ def c_mode(mode):
                                 warn_msg(pin[i].sensor)
 			elif warning == 0:
 				print "Object Moving Forward"
-		#s_time=time.clock()
+
 		for i in range(4):
                         if GPIO.input(btn[i].pin)==0:
 				print "Button pressed..."
 				mode_num=call_mode(mode, btn[i].pin, btn[i].button)
 				break
-		#print "TTime delay: ", time.clock()-s_time
 
 		if mode_num == 10 or mode_num == 11 or mode_num == 22:
 			break
@@ -297,6 +305,9 @@ def main():
 			print "Sending Message"
 			call('./runScript.sh')
 			num_mode=send_msg_temp
+			if send_msg_temp2 == 1:
+				print "Startinnngggggggggggggggggg"
+				startThread()
 		elif num_mode==0:
 			print "Default Front Mode"
 			time.sleep(2)

@@ -4,7 +4,7 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 #recommended delay of 60ms 
-p_cycle=0.06	#able to optimize down to 20ms
+p_cycle=0.02	#able to optimize down to 20ms
 
 #size 8 for starters buffer 124  miliseconds delay
 stackSize=8
@@ -14,12 +14,14 @@ stackF = []
 stackR = []
 stackL = []
 
-#BTNSHUT=26 #Far Right
-#BTNMF=17 #Left
-#BTNMT=27 #Right
-#GPIO.setup(BTNSHUT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#GPIO.setup(BTNMF, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#GPIO.setup(BTNMT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+BTNSHUT=26 #Far Right
+BTNMF=17 #Left
+BTNMT=27 #Right
+BTNCAM=19
+GPIO.setup(BTNSHUT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNMF, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNMT, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(BTNCAM, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def usensor(trig, echo):
 	pulse_start=0
@@ -33,13 +35,16 @@ def usensor(trig, echo):
 	time.sleep(0.00001)                      #Delay of 0.02 seconds Provide trigger signal to TRIG input, it requires a HIGH signal of atleast 10us duration.
         GPIO.output(trig, False)
 
-
+	s_time=time.time()
         while GPIO.input(echo)==0:               #Check whether the ECHO is LOW
 		pulse_start = time.time()              #Saves the last known time of LOW pulse
+		if time.time()-s_time > 1:
+                        break
 		
 	while GPIO.input(echo)==1:               #Check whether the ECHO is HIGH
 		pulse_end = time.time()                #Saves the last known time of HIGH pulse
-
+		if time.time()-s_time > 1:
+                        break
 
         pulse_duration = pulse_end - pulse_start
 
@@ -50,7 +55,7 @@ def usensor(trig, echo):
 
 def cur_pos(trig, echo, sensor):
 	distance = dist_avg(trig, echo, sensor)
-	dist_allowance = (distance*0.10)
+	dist_allowance = (distance*0.15)
 	dist_up = distance + dist_allowance
 	dist_down = distance - dist_allowance
 
@@ -68,9 +73,9 @@ def cur_pos(trig, echo, sensor):
 			print "Warning: ", distance
 			break
 		
-		#if GPIO.input(BTNSHUT)==0 or GPIO.input(BTNMF)==0 or GPIO.input(BTNMT)==0:
-                        #print "Button pressed..."
-                        #break
+		if GPIO.input(BTNSHUT)==0 or GPIO.input(BTNMF)==0 or GPIO.input(BTNMT)==0 or GPIO.input(BTNCAM)==0:
+                        print "Button pressed..."
+                        break
 	return warning
 	
 
@@ -81,11 +86,14 @@ def dist_avg(trig, echo, sensor):
 	readIn = usensor(trig, echo)
 	if sensor == "Front":
 		stackF.append(readIn)
+		#for i in stackF:
+			#print "No: ", i
 		if len(stackF) > stackSize:
 			stackF.pop(0)
 		distance = round((sum(stackF)/len(stackF)),1)
-		print "Size:", len(stackF), " Front", distance
-		
+		#print "Size:", len(stackF), " Front", distance
+		print "Front", distance
+
 	elif sensor == "Right":
                 stackR.append(readIn)
                 if len(stackR) > stackSize:
