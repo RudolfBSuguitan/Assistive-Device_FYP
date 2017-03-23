@@ -244,13 +244,13 @@ def c_mode(mode):
 	mode_num=0
 	while True:
 		distancex=100
-		s_time=timer()
+		#s_time=timer()
 		for x in range(mode):
 			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
 			if distance <= distancex:
 				distancex = distance
 				i=x
-		print "Time: ", timer()-s_time
+		#print "Time: ", timer()-s_time
 		if distancex < detection_range and distancex > 10 : 
 			print "Checking"		
 			warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
