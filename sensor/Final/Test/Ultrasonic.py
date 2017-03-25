@@ -2,7 +2,6 @@ from subprocess import call
 
 from Warnings import warn_msg
 from Warnings import respMessage
-from Warnings import warnCam
 from Distance import dist_avg
 from Distance import cur_pos
 
@@ -16,16 +15,21 @@ import threading
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
-detection_range=100
+detection_range=20
 
+#cv2.namedWindow("Main Frame"", cv2.WINDOW_AUTOSIZE)
 dBus = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/dbus.xml')
+#const = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/Construction2.xml')
 cleanSign = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/CleaningSign.xml')
+#rLight = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/rLight.xml')
+#noPed = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/noPed.xml')
 pedBtn = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/pedButton.xml')
 TrafL = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/TrafficL2.xml')
 stop2 = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/Stop2.xml')
 
+#video = cv2.VideoCapture(0)
+
 send_msg_temp=0
-send_msg_temp2=0
 
 LOOP=False
 
@@ -71,42 +75,19 @@ def setup():
 
                 print "Button: ", btn[x].button, ". Pin: ", btn[x].pin
                 time.sleep(0.5)
-	return
 
-def itemPos(x, sign):
-	if sign=="BusSign":
-		print sign
-        elif sign=="StopSign":
-		print sign
-        elif sign=="PedButton":
-		print sign
-        elif sign=="CleanSign":
-		print sign
-        elif sign=="PedLight":
-		print sign
-
-        if x <= 150 and x >= 1:
+def itemPos(x):
+        if x <= 150:
                 print "Left Object"
-		loc="Left"
         elif x > 150 and x <= 395:
                 print "Centre Object"
-		loc="Front"
         elif x > 395:
                 print "Right Object"
-		loc="Right"
-
-	warnCam(loc, sign)
         return
 
 def camThread():
         video = cv2.VideoCapture(0)
         time.sleep(3)
-	BS="BusSign"
-	SS="StopSign"
-	PB="PedButton"
-	CS="CleanSign"
-	PL="PedLight"
-	
         global LOOP
 
         while True:
@@ -114,53 +95,54 @@ def camThread():
                 	ret, OriginalFrame = video.read()
                 	gray = cv2.cvtColor(OriginalFrame, cv2.COLOR_BGR2GRAY)
 
+                	#signs = sign_cascade.detectMultiScale(gray, 5, 5)
                 	ped = pedBtn.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=6, minSize=(40, 40), maxSize=(90,90))
+                	#traffic_light2 traf = TrafL.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(45, 45), maxSize=(60, 60))
                 	traf = TrafL.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(60, 60), maxSize=(80, 80))
                 	cSign = cleanSign.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(65, 65), maxSize=(90,90))
                 	stopSign = stop2.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=6, minSize=(60, 60), maxSize=(80, 80))
                 	Bus = dBus.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=6, minSize=(55, 55), maxSize=(75, 75))
 
-                	print traf
+                	#print traf
                 	for (x,y,w,h) in Bus:
                         	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                         	font = cv2.FONT_HERSHEY_SIMPLEX
                         	cv2.putText(OriginalFrame, 'Bus Stop', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                        	print BS
-                        	itemPos(x, BS)
+                        	#print "Bus Stop Detected"
+                        	itemPos(x)
 
                 	#for (x,y,w,h) in traf:
                         	#cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                         	#font = cv2.FONT_HERSHEY_SIMPLEX
                         	#cv2.putText(OriginalFrame, 'TrafficLight', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                        	#print PL
-                        	#itemPos(x, PL)
+                        	#print "Traffic Light Detected"
+                        	#itemPos(x)
 
 			for (x,y,w,h) in ped:
                         	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                         	font = cv2.FONT_HERSHEY_SIMPLEX
                         	cv2.putText(OriginalFrame, 'Button', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                        	print PB
-                        	itemPos(x, PB)
+                        	#print "Button Detected"
+                        	itemPos(x)
 
                 	for (x,y,w,h) in stopSign:
                         	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                         	font = cv2.FONT_HERSHEY_SIMPLEX
                         	cv2.putText(OriginalFrame, 'Stop', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                        	print SS
-                        	itemPos(x, SS)
+                        	#print "Stop Sign Detected"
+                        	itemPos(x)
 
                 	for (x,y,w,h) in cSign:
                         	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                         	font = cv2.FONT_HERSHEY_SIMPLEX
                         	cv2.putText(OriginalFrame, 'Clean', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                        	print CS
-                        	itemPos(x, CS)
+                        	#print "Clean Sign Detected"
+                        	itemPos(x)
 
 			#cv2.imshow("Main Frame", OriginalFrame)
 
 			k = cv2.waitKey(1) & 0xFF
                 	if k == 27:
-				LOOP=False
                         	break
 
 		elif LOOP == False:
@@ -168,21 +150,13 @@ def camThread():
         		#video.release()
         		#cv2.destroyAllWindows()
 			break
+			
+	#time.sleep(2)
+        #video.release()
+        #cv2.destroyAllWindows()
 	return
 
-def startThread():
-	global LOOP
-	global send_msg_temp2
-	send_msg_temp2=0
-	print "Starting Camera"
-	#respMessage("ECamera")
-        LOOP=True
-        print LOOP
-       	time.sleep(2)
-        threading.Thread(target=camThread, args=()).start()
-
-	return
-
+#camT=threading.Thread(target=camThread, args=())
 
 def call_mode(m_num, bpin, btn):
 	btn_num=0
@@ -197,10 +171,6 @@ def call_mode(m_num, bpin, btn):
 		respMessage(3)
 	elif btn == "Mode" and m_num == 3:
 		respMessage(1)
-	elif btn == "PiCam" and LOOP == False:
-		respMessage("ECamera")
-	elif btn == "PiCam" and LOOP == True:
-		respMessage("DCamera")
 
 	while GPIO.input(bpin)==0:
 		print "Button: ", btn
@@ -212,8 +182,6 @@ def call_mode(m_num, bpin, btn):
 			print "Success"
 			if btn == "Shutdown":
 				print "Rebooting"
-				LOOP=False
-				print LOOP
 				btn_num=10
 				time.sleep(2)
 				break
@@ -230,26 +198,27 @@ def call_mode(m_num, bpin, btn):
                                 	break
                         	break
 			elif btn == "Panic":
-				global send_msg_temp2
-				print LOOP
-				if LOOP == True:
-					send_msg_temp2=1
-					#respMessage("DCamera")
-					LOOP=False
-					print LOOP
 				print "Sending Message"
 				btn_num=30
-				time.sleep(5)
+				time.sleep(2)
 				break
 			elif btn == "PiCam":
 				if LOOP == False:
-					startThread()
+					print "Starting Camera"
+					LOOP=True
+					print LOOP
+					time.sleep(2)
+					threading.Thread(target=camThread, args=()).start()
+					time.sleep(2)
+					#camT.start()
 				elif LOOP == True:
 					print "Disabling Camera"
-					#respMessage("DCamera")
 					LOOP=False
 					print LOOP
 					time.sleep(2)
+					#threading.Thread(target=camThread, args=()).join()
+					#video.release()
+        				#cv2.destroyAllWindows()
 				btn_num=m_num
 
 		if count < 3 and GPIO.input(bpin)==1:
@@ -261,14 +230,40 @@ def call_mode(m_num, bpin, btn):
 
 def c_mode(mode):
 	mode_num=0
+	count1=0
+	count2=0
+	count3=0
+	avg_dist=0
+	rec_time=0
+	s_time=timer()
+	n_small=200
+	n_high=200
 	while True:
-		distancex=100
+		distancex=20
+
 		for x in range(mode):
 			distance = dist_avg(pin[x].trig, pin[x].echo, pin[x].sensor)
+			if pin[x].sensor == "Right":
+				count2+=1
+			if pin[x].sensor == "Front":
+				count1+=1
+				print distance
+				avg_dist=distance
+			if pin[x].sensor == "Left":
+				count3+=1
 			if distance <= distancex:
 				distancex = distance
 				i=x
-
+		#count+=1
+		#avg_dist+=distance
+		if (timer()-s_time) >= 60:
+			mode_num=10
+			print "Time", timer()-s_time
+			print "Total Readings", "F: ",count1, "R: ",count2, "L: ",count3
+			print "Avegare Distance", avg_dist/count1
+			print "Lowest: ", n_small, " Highest: ", n_high
+			break
+		
 		if distancex < detection_range and distancex > 10 : 
 			print "Checking"		
 			warning = cur_pos(pin[i].trig, pin[i].echo, pin[i].sensor) 
@@ -277,11 +272,11 @@ def c_mode(mode):
                                 warn_msg(pin[i].sensor)
 			elif warning == 0:
 				print "Object Moving Forward"
-
 		for i in range(4):
                         if GPIO.input(btn[i].pin)==0:
 				print "Button pressed..."
 				mode_num=call_mode(mode, btn[i].pin, btn[i].button)
+				s_time=timer()
 				break
 
 		if mode_num == 10 or mode_num == 11 or mode_num == 22:
@@ -294,10 +289,14 @@ def c_mode(mode):
 			elif mode == 3:
 				send_msg_temp=22
 			break
+
 	return mode_num
 
+#Think about changing the buffer size and delay time
+#While True then false the other scripts
+#create a class each
 def main():
-	front_mode=1
+	front_mode=3
 	three_mode=3
 	num_mode=0
 
@@ -319,9 +318,6 @@ def main():
 			print "Sending Message"
 			call('./runScript.sh')
 			num_mode=send_msg_temp
-			if send_msg_temp2 == 1:
-				respMessage("ECamera")
-				startThread()
 		elif num_mode==0:
 			print "Default Front Mode"
 			time.sleep(2)

@@ -40,7 +40,7 @@ def camThread():
 		stopSign = stop2.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=3, minSize=(60, 60), maxSize=(80, 80))
 		Bus = dBus.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=6, minSize=(55, 55), maxSize=(75, 75))
 
-		print traf
+		#print traf
 		for (x,y,w,h) in Bus:
                 	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                 	font = cv2.FONT_HERSHEY_SIMPLEX
@@ -48,32 +48,32 @@ def camThread():
                 	print "Bus Stop Detected"
                 	itemPos(x)
 
-		for (x,y,w,h) in traf:
-                	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
-                	font = cv2.FONT_HERSHEY_SIMPLEX
-                	cv2.putText(OriginalFrame, 'TrafficLight', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                	print "Traffic Light Detected"
-                	itemPos(x)
+		#for (x,y,w,h) in traf:
+                	#cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
+                	#font = cv2.FONT_HERSHEY_SIMPLEX
+                	#cv2.putText(OriginalFrame, 'TrafficLight', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                	#print "Traffic Light Detected"
+                	#itemPos(x)
 
 
         	for (x,y,w,h) in ped:
                 	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                 	font = cv2.FONT_HERSHEY_SIMPLEX
-                	cv2.putText(OriginalFrame, 'Button', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                	cv2.putText(OriginalFrame, 'Btn', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
 			print "Button Detected"
 			itemPos(x)
 
 		for (x,y,w,h) in stopSign:
                 	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                 	font = cv2.FONT_HERSHEY_SIMPLEX
-                	cv2.putText(OriginalFrame, 'Stop', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                	cv2.putText(OriginalFrame, 'S', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
                 	print "Stop Sign Detected"
                 	itemPos(x)
 
 		for (x,y,w,h) in cSign:
                 	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                 	font = cv2.FONT_HERSHEY_SIMPLEX
-                	cv2.putText(OriginalFrame, 'Clean', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                	cv2.putText(OriginalFrame, 'Cln', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
                 	print "Clean Sign Detected"
                 	itemPos(x)
 
@@ -84,9 +84,11 @@ def camThread():
         	k = cv2.waitKey(1) & 0xFF
         	if k == 27:
                 	LOOP=False
+			break
 
 	video.release()
 	cv2.destroyAllWindows()
+	return
 
 camT = threading.Thread(target=camThread, args=())
 camT.start()

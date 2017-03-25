@@ -3,47 +3,11 @@ pygame.mixer.init()
 
 import time
 
-def warnCam(loc, sign):
-	ms_time=0
-	if sign == "BusSign" :
-		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/BusSign575.wav"
-		ms_time=0.576
-	elif sign == "StopSign":
-		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/StopSign680.wav"
-		ms_time=0.681
-	elif sign == "PedButton":
-		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/PedButton590.wav"
-		ms_time=0.591
-	elif sign == "CleanSign":
-		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/CleanSign690.wav"
-		ms_time=0.691
-	elif sign == "PedLight":
-		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/PedLight520.wav"
-		ms_time=0.521
-
-	pygame.mixer.music.load(wav_dir)
-	pygame.mixer.music.play()
-	time.sleep(ms_time)
-
-	if loc == "Front":
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Front400ms.wav")
-		pygame.mixer.music.play()
-		time.sleep(0.42)
-	elif loc == "Right":
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Right280ms.wav")
-		pygame.mixer.music.play()
-		time.sleep(0.32)
-	elif loc == "Left":
-		pygame.mixer.music.load("/home/pi/Documents/Assistive-Device_FYP/Messages/Left460ms.wav")
-		pygame.mixer.music.play()
-		time.sleep(0.48)
-	return
-
 def respMessage(process):
 	ms_time=0
 	if process == "Beep":
-		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/Success.wav"
-		ms_time=0.651
+		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/beep-01a.mp3"
+		ms_time=0.05
 
 	elif process == 1:
 		wav_dir="/home/pi/Documents/Assistive-Device_FYP/Messages/RespAudio/1mode.wav"
@@ -165,4 +129,3 @@ def n_warning(dist, trig, echo, sensor):
 
 
 #if __name__ == "__main__":
-
