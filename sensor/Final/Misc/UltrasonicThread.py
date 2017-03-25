@@ -107,9 +107,9 @@ def runThread(trig, echo, sensor):
 
 	while LOOP:
 		if sensor == 'Front':
-			s_time = time.clock()
+			#s_time = time.clock()
 			sf_distance = dist_avg(trig, echo, sensor)
-			print time.clock() - s_time
+			#print time.clock() - s_time
 		elif sensor == 'Right':
 			sr_distance = dist_avg(trig, echo, sensor)
 		elif sensor == 'Left':
