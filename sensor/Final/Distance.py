@@ -92,7 +92,7 @@ def dist_avg(trig, echo, sensor):
 			stackF.pop(0)
 		distance = round((sum(stackF)/len(stackF)),1)
 		#print "Size:", len(stackF), " Front", distance
-		print "Front", distance
+		#print "Front", distance
 
 	elif sensor == "Right":
                 stackR.append(readIn)
@@ -100,7 +100,7 @@ def dist_avg(trig, echo, sensor):
                         stackR.pop(0)
 
                 distance = round((sum(stackR)/len(stackR)),1)
-		print "Right", distance		
+		#print "Right", distance		
 
 	elif sensor == "Left":
                 stackL.append(readIn)
@@ -108,7 +108,7 @@ def dist_avg(trig, echo, sensor):
                         stackL.pop(0)
 
                 distance = round((sum(stackL)/len(stackL)),1)
-		print "Left", distance
+		#print "Left", distance
 
 	return distance
 
