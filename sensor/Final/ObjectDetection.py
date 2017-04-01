@@ -7,7 +7,7 @@ LOOP=True
 
 #cv2.namedWindow("Main Frame"", cv2.WINDOW_AUTOSIZE)
 dBus = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/dbus.xml')
-#const = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/Construction2.xml')
+const = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/construction_sign.xml')
 cleanSign = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/CleaningSign.xml')
 #rLight = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/rLight.xml')
 #noPed = cv2.CascadeClassifier('/home/pi/Documents/Assistive-Device_FYP/cascades/noPed.xml')
@@ -42,7 +42,7 @@ def camThread():
         while True:
 		if LOOP == True:		
                 	ret, OriginalFrame = video.read()
-			count+=1
+			#count+=1
                 	gray = cv2.cvtColor(OriginalFrame, cv2.COLOR_BGR2GRAY)
 
                 	ped = pedBtn.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=6, minSize=(45, 45), maxSize=(82,82))
@@ -50,8 +50,9 @@ def camThread():
                 	cSign = cleanSign.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=4, minSize=(73, 73), maxSize=(99,99))
                 	stopSign = stop2.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=6, minSize=(55, 55), maxSize=(97, 97))
                 	Bus = dBus.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=6, minSize=(55, 55), maxSize=(97, 97))
+			constTest = const.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=6, minSize=(40, 40), maxSize=(95, 95))
 
-                	#print cSign
+                	print constTest
                 	for (x,y,w,h) in Bus:
                         	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
                         	font = cv2.FONT_HERSHEY_SIMPLEX
@@ -59,12 +60,12 @@ def camThread():
                         	#print BS, Bus
                         	itemPos(x)
 
-                	#for (x,y,w,h) in traf:
-                        	#cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
-                        	#font = cv2.FONT_HERSHEY_SIMPLEX
-                        	#cv2.putText(OriginalFrame, 'TrafficLight', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
-                        	#print PL
-                        	#itemPos(x, PL)
+			for (x,y,w,h) in constTest:
+				cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
+				font = cv2.FONT_HERSHEY_SIMPLEX
+				cv2.putText(OriginalFrame, 'Construction', (x+w, y+h), font, 1, (0, 255, 255), 2, cv2.LINE_AA)
+				print "Construction Sign"
+				#itemPos(x, PL)
 
 			for (x,y,w,h) in ped:
                         	cv2.rectangle(OriginalFrame,(x,y),(x+w,y+h),(255,255,0),2)
@@ -87,9 +88,9 @@ def camThread():
                         	#print CS, cSign
                         	itemPos(x)
 
-			#cv2.imshow("Main Frame", OriginalFrame)
-			print time.time()-s_time
-			print count
+			cv2.imshow("Main Frame", OriginalFrame)
+			#print time.time()-s_time
+			#print count
 
 			k = cv2.waitKey(1) & 0xFF
                 	if k == 27:
